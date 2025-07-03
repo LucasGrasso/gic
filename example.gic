@@ -1,0 +1,12 @@
+forall T1. forall T2. forall M. forall N.
+	(Tipo(M, arrow(T1,T2)) and Tipo(N, T1)) impl Tipo(app(M, N), T2);
+
+exists M. Tipo(M, arrow(α,arrow(β,γ)));
+
+exists M. Tipo(M, arrow(α,β));
+
+exists M. Tipo(M, α);
+
+/*
+L-Formulas  t ::= P(t1,... tn) | False | t and t | t or t | t impl t | not t | exists X. t | forall X. t
+*/

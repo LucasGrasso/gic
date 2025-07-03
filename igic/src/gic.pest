@@ -1,0 +1,40 @@
+upper       = _{ 'A'..'Z' }
+lower       = _{ 'a'..'z' }
+digit 	  = _{ '0'..'9' }
+alpha = _{ upper | lower }
+alphanum    = _{ alpha | digit }
+
+WHITESPACE  = _{ " " | "\t" | "\r" | "\n" }
+COMMENT     = _{ "//" ~ (!"\n" ~ ANY)* ~ ("\n" | EOI)
+               | "/*" ~ (!"*/" ~ ANY)* ~ "*/" }
+
+var         = @{ upper ~ (alphanum)* }
+cnt       = @{ lower ~ (alphanum)* }
+
+term       = { var | func }
+func       = { cnt ~ "(" ~ term_args ~ ")" }
+term_args  = _{ term ~ ("," ~ term)* }
+
+identifier = @{ upper ~ (alphanum)* }
+
+forall_kw  = { "forall" | "∀" }
+exists_kw  = { "exists" | "∃" }
+quantifier = { forall_kw | exists_kw}
+
+impl_op    = { "impl" | "⇒" }
+and_op     = { "and" | "∧" }
+or_op      = { "or" | "∨" }
+not_op     = { "not" | "¬" }
+
+formula     = { implies }
+implies     = { or_expr ~ ( impl_op ~ or_expr )* }
+or_expr     = { and_expr ~ ( or_op ~ and_expr )* }
+and_expr    = { not_expr ~ ( and_op ~ not_expr )* }
+not_expr    = { not_op ~ not_expr | quant | atom_form | "(" ~ formula ~ ")" }
+quant       = { quantifier ~ var ~ "." ~ formula }
+atom_form   = { predicate | bottom }
+predicate   = { identifier ~ "(" ~ term_args ~ ")" }
+bottom     = { "bottom" | "⊥" }
+
+clause      = { formula ~ ";" }
+file        = { SOI ~ ( clause ~ WHITESPACE? )* ~ EOI }
