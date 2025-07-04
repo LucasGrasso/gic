@@ -1,4 +1,5 @@
 pub mod ast;
+pub mod clause;
 pub mod errors;
 
 pub use ast::Expression; // Re-exporting `Expression`

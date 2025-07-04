@@ -1,40 +1,57 @@
 upper       = _{ 'A'..'Z' }
 lower       = _{ 'a'..'z' }
 digit 	  = _{ '0'..'9' }
-alpha = _{ upper | lower }
-alphanum    = _{ alpha | digit }
+nothing   = _{ "" }
+alphanum_lower = _{ lower | digit }
+alphanum_upper    = _{ upper | digit }
 
 WHITESPACE  = _{ " " | "\t" | "\r" | "\n" }
 COMMENT     = _{ "//" ~ (!"\n" ~ ANY)* ~ ("\n" | EOI)
                | "/*" ~ (!"*/" ~ ANY)* ~ "*/" }
 
-var         = @{ upper ~ (alphanum)* }
-cnt       = @{ lower ~ (alphanum)* }
+var         = @{ alphanum_upper+ }
+cnt       = @{ alphanum_lower+ }
 
-term       = { var | func }
-func       = { cnt ~ "(" ~ term_args ~ ")" }
 term_args  = _{ term ~ ("," ~ term)* }
 
-identifier = @{ upper ~ (alphanum)* }
+term       = _{ var | func | cnt  }
+func       = { cnt ~ "(" ~ term_args ~ ")" }
+
+identifier = @{ upper ~ (alphanum_lower)* }
+predicate   = { identifier ~ "(" ~ term_args ~ ")" }
 
 forall_kw  = { "forall" | "∀" }
 exists_kw  = { "exists" | "∃" }
 quantifier = { forall_kw | exists_kw}
 
-impl_op    = { "impl" | "⇒" }
+impl_op    = { "impl" | "⇒" | "=>" }
 and_op     = { "and" | "∧" }
 or_op      = { "or" | "∨" }
 not_op     = { "not" | "¬" }
 
-formula     = { implies }
-implies     = { or_expr ~ ( impl_op ~ or_expr )* }
-or_expr     = { and_expr ~ ( or_op ~ and_expr )* }
-and_expr    = { not_expr ~ ( and_op ~ not_expr )* }
-not_expr    = { not_op ~ not_expr | quant | atom_form | "(" ~ formula ~ ")" }
-quant       = { quantifier ~ var ~ "." ~ formula }
-atom_form   = { predicate | bottom }
-predicate   = { identifier ~ "(" ~ term_args ~ ")" }
 bottom     = { "bottom" | "⊥" }
 
-clause      = { formula ~ ";" }
+expr = { pratt_expr }
+pratt_expr  = { pratt_token* }
+
+pratt_token = _{
+    quantifier_expr
+  | not_op
+  | and_op
+  | or_op
+  | impl_op
+  | bottom
+  | predicate
+  | group
+}
+
+group = { "(" ~ expr ~ ")" }
+
+quantifier_expr = @{quantifier ~ WHITESPACE* ~ var ~ WHITESPACE* ~ "." ~ WHITESPACE*}
+
+prefix  = { not_op| quantifier_expr }
+primary = { predicate | bottom | "(" ~ expr ~ ")"}
+infix   = { and_op | or_op | impl_op }
+
+clause      = { expr ~ ";" }
 file        = { SOI ~ ( clause ~ WHITESPACE? )* ~ EOI }
