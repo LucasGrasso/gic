@@ -1,42 +1,81 @@
-use crate::types::ast::{Proposition, Term};
-use crate::types::clause::Clause;
-use crate::types::{Expression, GicError, Result};
+use super::skolem::SkolemContext;
+use crate::types::ast::Expression;
+use crate::types::clause::{Clause, Literal, Progam};
+use crate::types::{GicError, Result}; // adjust path as needed
 
-pub fn to_cnf(expr: Expression) -> Clause {
-	let no_implications = eliminate_implications(expr);
-	let nnf = to_nnf(no_implications);
-	let prenex = distribute_quantifiers(nnf);
-	let mut counter = 0;
-	let no_existentials = deskolem(prenex, &[], &mut counter);
-	let quantifier_free = remove_universal_quantifiers(no_existentials);
-	flatten_cnf(quantifier_free).unwrap()
+pub struct Clausifier {
+	clause_id: usize,
+	ctx: SkolemContext,
+	program: Progam,
 }
 
-fn flatten_cnf(expr: Expression) -> Result<Clause> {
+impl Clausifier {
+	pub fn new() -> Self {
+		Clausifier { clause_id: 1, ctx: SkolemContext::new(), program: Progam(Vec::new()) }
+	}
+
+	pub fn clausify(&mut self, expr: Expression) -> Result<Progam> {
+		self.ctx.set_clause_id(self.clause_id);
+		self.clause_id += 1;
+
+		let no_implications = eliminate_implications(expr);
+		let nnf = to_nnf(no_implications);
+		let prenex = distribute_quantifiers(nnf);
+
+		let no_existentials = self.ctx.deskolem(prenex);
+		let quantifier_free = remove_universal_quantifiers(no_existentials);
+		let cnf = flatten_cnf(quantifier_free)?;
+		self.program.0.extend(cnf.clone().0);
+		Ok(cnf)
+	}
+
+	pub fn get_program(&self) -> &Progam {
+		&self.program
+	}
+}
+
+fn expr_to_literal(expr: Expression) -> Result<Literal> {
+	match expr {
+		Expression::Proposition(p) => Ok(Literal::Proposition(p)),
+		Expression::Not(inner) => match *inner {
+			Expression::Proposition(p) => Ok(Literal::Not(p)),
+			_ => Err(GicError::ClauseError(format!("Not applied to non-proposition: {}", inner))),
+		},
+		Expression::Bottom => Ok(Literal::Bottom),
+		_ => Err(GicError::ClauseError(format!("Expression is not a literal: {}", expr))),
+	}
+}
+
+pub fn flatten_cnf(expr: Expression) -> Result<Progam> {
 	match expr {
 		Expression::And(a, b) => {
-			let mut left = flatten_cnf(*a)?;
-			let mut right = flatten_cnf(*b)?;
-			left.append(&mut right);
-			Ok(left)
+			let mut left_clauses = flatten_cnf(*a)?;
+			let mut right_clauses = flatten_cnf(*b)?;
+			left_clauses.append(&mut right_clauses);
+			Ok(left_clauses)
 		},
+
 		Expression::Or(a, b) => {
 			let left = flatten_cnf(*a)?;
 			let right = flatten_cnf(*b)?;
+			let mut result = Vec::new();
 
-			let mut result = vec![];
-
-			for l in &left.0 {
-				for r in &right.0 {
-					let mut disjunction = l.clone();
-					disjunction.extend_from_slice(&r);
-					result.push(disjunction);
+			// Distribute literals from both sides
+			for Clause(lits_l) in &left {
+				for Clause(lits_r) in &right {
+					let mut disj = lits_l.clone();
+					disj.extend(lits_r.clone());
+					result.push(Clause(disj));
 				}
 			}
 
-			Ok(Clause(result))
+			Ok(Progam(result))
 		},
-		e => Ok(Clause(vec![vec![e]])), // cláusula unitaria con literal
+
+		leaf => {
+			let lit = expr_to_literal(leaf)?;
+			Ok(Progam(vec![Clause(vec![lit])]))
+		},
 	}
 }
 
@@ -141,73 +180,6 @@ fn distribute_quantifiers(expr: Expression) -> Expression {
 	}
 }
 
-fn deskolem(expr: Expression, scope: &[String], counter: &mut usize) -> Expression {
-	match expr {
-		Expression::Exists(var, inner) => {
-			let fname = format!("f{}", *counter);
-			*counter += 1;
-			let args: Vec<Term> = scope.iter().map(|v| Term::Identifier(v.clone())).collect();
-			let replacement = Term::FunctionApplication { name: fname, args };
-			let new_body = substitute_term(*inner, &var, replacement);
-			deskolem(new_body, scope, counter)
-		},
-		Expression::ForAll(var, inner) => {
-			let mut extended = scope.to_vec();
-			extended.push(var.clone());
-			Expression::ForAll(var, Box::new(deskolem(*inner, &extended, counter)))
-		},
-		Expression::And(a, b) => Expression::And(
-			Box::new(deskolem(*a, scope, counter)),
-			Box::new(deskolem(*b, scope, counter)),
-		),
-		Expression::Or(a, b) => Expression::Or(
-			Box::new(deskolem(*a, scope, counter)),
-			Box::new(deskolem(*b, scope, counter)),
-		),
-		Expression::Not(inner) => Expression::Not(Box::new(deskolem(*inner, scope, counter))),
-		other => other,
-	}
-}
-
-fn substitute_term(expr: Expression, var: &str, replacement: Term) -> Expression {
-	match expr {
-		Expression::Proposition(p) => {
-			let new_terms =
-				p.terms.into_iter().map(|t| substitute_in_term(t, var, &replacement)).collect();
-			Expression::Proposition(Proposition { name: p.name, terms: new_terms })
-		},
-		Expression::Not(e) => {
-			Expression::Not(Box::new(substitute_term(*e, var, replacement.clone())))
-		},
-		Expression::And(a, b) => Expression::And(
-			Box::new(substitute_term(*a, var, replacement.clone())),
-			Box::new(substitute_term(*b, var, replacement.clone())),
-		),
-		Expression::Or(a, b) => Expression::Or(
-			Box::new(substitute_term(*a, var, replacement.clone())),
-			Box::new(substitute_term(*b, var, replacement.clone())),
-		),
-		Expression::ForAll(v, e) => {
-			Expression::ForAll(v.clone(), Box::new(substitute_term(*e, var, replacement)))
-		},
-		Expression::Exists(v, e) => {
-			Expression::Exists(v.clone(), Box::new(substitute_term(*e, var, replacement)))
-		},
-		other => other,
-	}
-}
-
-fn substitute_in_term(term: Term, var: &str, replacement: &Term) -> Term {
-	match term {
-		Term::Identifier(s) if s == var => replacement.clone(),
-		Term::FunctionApplication { name, args } => Term::FunctionApplication {
-			name,
-			args: args.into_iter().map(|t| substitute_in_term(t, var, replacement)).collect(),
-		},
-		t => t,
-	}
-}
-
 fn remove_universal_quantifiers(expr: Expression) -> Expression {
 	match expr {
 		Expression::ForAll(_, inner) => remove_universal_quantifiers(*inner),
@@ -221,26 +193,5 @@ fn remove_universal_quantifiers(expr: Expression) -> Expression {
 		),
 		Expression::Not(e) => Expression::Not(Box::new(remove_universal_quantifiers(*e))),
 		other => other,
-	}
-}
-
-#[cfg(test)]
-mod tests {
-	use super::*;
-	#[test]
-	fn test_to_cnf_pipeline() {
-		let expr = Expression::Implies(
-			Box::new(Expression::Proposition(Proposition {
-				name: "P".into(),
-				terms: vec![Term::Identifier("x".into())],
-			})),
-			Box::new(Expression::Proposition(Proposition {
-				name: "Q".into(),
-				terms: vec![Term::Identifier("x".into())],
-			})),
-		);
-
-		let cnf_clauses = to_cnf(expr);
-		println!("CNF: {:?}", cnf_clauses);
 	}
 }

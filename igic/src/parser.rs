@@ -130,6 +130,8 @@ where
 		lhs: Self::Output,
 		op: Self::Input,
 	) -> std::result::Result<Self::Output, Self::Error> {
+		let _ = op;
+		let _ = lhs;
 		Ok(Expression::Bottom)
 	}
 }
