@@ -10,6 +10,23 @@ use crate::types::{GicError, Result};
 #[grammar = "gic.pest"]
 pub struct TokenParser;
 
+pub fn parse_formula(input: &str) -> Result<Expression> {
+	let mut pairs = TokenParser::parse(Rule::expr, input).map_err(GicError::from)?;
+
+	let expr_pair = pairs
+		.next()
+		.ok_or_else(|| GicError::ParseError("No expression found".to_string()))?;
+
+	let mut expr_children = expr_pair
+		.into_inner()
+		.filter(|p| !matches!(p.as_rule(), Rule::WHITESPACE | Rule::COMMENT));
+
+	let mut pratt = crate::parser::GicParser;
+	pratt
+		.parse(&mut expr_children)
+		.map_err(|e| GicError::ParseError(format!("Pratt parser error: {:?}", e)))
+}
+
 pub fn parse_gic_file(input: &str) -> Result<Vec<Expression>> {
 	let mut pairs = TokenParser::parse(Rule::file, input).map_err(GicError::from)?;
 

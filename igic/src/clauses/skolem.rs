@@ -103,7 +103,6 @@ fn substitute_term(term: Term, var: &str, replacement: &Term) -> Term {
 			name,
 			args: args.into_iter().map(|t| substitute_term(t, var, replacement)).collect(),
 		},
-		Term::Expression(e) => Term::Expression(Box::new(substitute_var(*e, var, replacement))),
 		other => other,
 	}
 }

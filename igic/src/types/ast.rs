@@ -1,13 +1,12 @@
 use std::fmt;
 
-#[derive(Debug, PartialEq, Clone)]
+#[derive(Debug, PartialEq, Clone, Eq, Hash)]
 pub enum Term {
 	Identifier(String),
-	Expression(Box<Expression>),
 	FunctionApplication { name: String, args: Vec<Term> },
 }
 
-#[derive(Debug, PartialEq, Clone)]
+#[derive(Debug, PartialEq, Clone, Eq, Hash)]
 pub struct Proposition {
 	pub name: String,
 	pub terms: Vec<Term>,
@@ -29,7 +28,6 @@ impl fmt::Display for Term {
 	fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
 		match self {
 			Term::Identifier(id) => write!(f, "{}", id),
-			Term::Expression(expr_box) => write!(f, "({})", expr_box), // Parenthesize expressions for clarity
 			Term::FunctionApplication { name, args } => {
 				// Format: name(arg1, arg2, ...)
 				let args_str: Vec<String> = args
@@ -54,7 +52,6 @@ impl fmt::Display for Expression {
 						.iter()
 						.map(|t| match t {
 							Term::Identifier(id) => id.clone(),
-							Term::Expression(expr) => format!("{}", expr),
 							Term::FunctionApplication { name, args } => {
 								format!(
 									"{}({})",

@@ -1,0 +1,13 @@
+forall T1. forall U1. forall M1. forall N1. (Type(M1, arrow(T1,U1)) and Type(N1, U1)) impl Type(app(M1, N1), U1);
+
+exists M. Type(M, arrow(a,arrow(b,c)));
+
+exists M. Type(M, arrow(a,b));
+
+forall N. exists M. Type(M, a);
+
+/*
+L-Formulas  f ::= P(t1,... tn) | bottom | f and f | f or f | f impl f | not f | exists X. f | forall X. f
+or equivalently:
+L-Formulas  f ::= P(t1,... tn) | ⊥ | f ∧ f | f ∨ f | f ⇒ f | ¬ f | ∃ X. f | ∀ X. f
+*/

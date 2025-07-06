@@ -1,6 +1,6 @@
 use super::skolem::SkolemContext;
 use crate::types::ast::Expression;
-use crate::types::clause::{Clause, Literal, Progam};
+use crate::types::clause::{self, Clause, Literal, Progam};
 use crate::types::{GicError, Result}; // adjust path as needed
 
 pub struct Clausifier {
@@ -14,7 +14,13 @@ impl Clausifier {
 		Clausifier { clause_id: 1, ctx: SkolemContext::new(), program: Progam(Vec::new()) }
 	}
 
-	pub fn clausify(&mut self, expr: Expression) -> Result<Progam> {
+	pub fn add_to_progam(&mut self, expr: Expression) -> Result<Progam> {
+		let clause = self.clausify(expr)?;
+		self.program.0.push(clause);
+		Ok(self.program.clone())
+	}
+
+	pub fn clausify(&mut self, expr: Expression) -> Result<Clause> {
 		self.ctx.set_clause_id(self.clause_id);
 		self.clause_id += 1;
 
@@ -25,8 +31,8 @@ impl Clausifier {
 		let no_existentials = self.ctx.deskolem(prenex);
 		let quantifier_free = remove_universal_quantifiers(no_existentials);
 		let cnf = flatten_cnf(quantifier_free)?;
-		self.program.0.extend(cnf.clone().0);
-		Ok(cnf)
+
+		Ok(cnf.0[0].clone()) // Return the first clause from the CNF
 	}
 
 	pub fn get_program(&self) -> &Progam {
@@ -41,7 +47,6 @@ fn expr_to_literal(expr: Expression) -> Result<Literal> {
 			Expression::Proposition(p) => Ok(Literal::Not(p)),
 			_ => Err(GicError::ClauseError(format!("Not applied to non-proposition: {}", inner))),
 		},
-		Expression::Bottom => Ok(Literal::Bottom),
 		_ => Err(GicError::ClauseError(format!("Expression is not a literal: {}", expr))),
 	}
 }

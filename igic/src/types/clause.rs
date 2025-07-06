@@ -2,12 +2,20 @@ use crate::types::ast::Proposition;
 use std::fmt;
 use std::slice::Iter;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum Literal {
 	Proposition(Proposition),
 	Not(Proposition),
-	Bottom,
 }
+
+impl Literal {
+	pub fn to_proposition(&self) -> Proposition {
+		match self {
+			Literal::Proposition(p) | Literal::Not(p) => p.clone(),
+		}
+	}
+}
+
 impl fmt::Display for Literal {
 	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
 		match self {
@@ -28,7 +36,6 @@ impl fmt::Display for Literal {
 					prop.terms.iter().map(|t| format!("{}", t)).collect::<Vec<String>>().join(", ")
 				)
 			},
-			Literal::Bottom => write!(f, "⊥"),
 		}
 	}
 }
