@@ -1,5 +1,10 @@
 use super::mgu::{Unifiable, UnificationEquation};
-use crate::types::ast::{Proposition, Term};
+use crate::types::clause::Literal;
+use crate::types::{
+	ast::{Proposition, Term},
+	clause::Clause,
+};
+
 use std::collections::HashMap;
 
 pub type Substitution = HashMap<Unifiable, Unifiable>;
@@ -32,6 +37,36 @@ pub fn apply_substitution(sub: &Substitution, t: &Unifiable) -> Unifiable {
 				.collect();
 			Unifiable::Prop(Proposition { name: p.name.clone(), terms: new_terms })
 		},
+	}
+}
+
+pub fn apply_substitution_to_clause(sub: &Substitution, clause: &mut Clause) {
+	for literal in clause.0.iter_mut() {
+		match literal {
+			Literal::Proposition(prop) => {
+				let new_terms = prop
+					.terms
+					.iter()
+					.map(|t| match apply_substitution(sub, &Unifiable::Term(t.clone())) {
+						Unifiable::Term(nt) => nt,
+						_ => panic!("Invalid substitution result in proposition"),
+					})
+					.collect();
+				*literal =
+					Literal::Proposition(Proposition { name: prop.name.clone(), terms: new_terms });
+			},
+			Literal::Not(prop) => {
+				let new_terms = prop
+					.terms
+					.iter()
+					.map(|t| match apply_substitution(sub, &Unifiable::Term(t.clone())) {
+						Unifiable::Term(nt) => nt,
+						_ => panic!("Invalid substitution result in proposition"),
+					})
+					.collect();
+				*literal = Literal::Not(Proposition { name: prop.name.clone(), terms: new_terms });
+			},
+		}
 	}
 }
 

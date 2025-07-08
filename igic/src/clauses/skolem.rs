@@ -39,7 +39,11 @@ fn deskolem(expr: Expression, scope: &mut Vec<String>, ctx: &mut SkolemContext) 
 			}
 
 			let name = ctx.next_name(&var);
-			let skolem_term = Term::FunctionApplication { name, args };
+			let skolem_term: Term = if scope.len() == 0 {
+				Term::Identifier(name.clone())
+			} else {
+				Term::FunctionApplication { name, args }
+			};
 
 			let substituted = substitute_var(*inner, &var, &skolem_term);
 			deskolem(substituted, scope, ctx)

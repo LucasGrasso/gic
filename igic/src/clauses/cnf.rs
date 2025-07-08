@@ -14,13 +14,17 @@ impl Clausifier {
 		Clausifier { clause_id: 1, ctx: SkolemContext::new(), program: Progam(Vec::new()) }
 	}
 
-	pub fn add_to_progam(&mut self, expr: Expression) -> Result<Progam> {
-		let clause = self.clausify(expr)?;
-		self.program.0.push(clause);
-		Ok(self.program.clone())
+	pub fn add_to_progam(&mut self, expr: Expression) -> Result<()> {
+		let progamified_clause = self.clausify(expr)?;
+		let clause = progamified_clause
+			.0
+			.first()
+			.ok_or_else(|| GicError::ClauseError("No clauses generated".to_string()))?;
+		self.program.0.push(clause.clone());
+		Ok(())
 	}
 
-	pub fn clausify(&mut self, expr: Expression) -> Result<Clause> {
+	pub fn clausify(&mut self, expr: Expression) -> Result<Progam> {
 		self.ctx.set_clause_id(self.clause_id);
 		self.clause_id += 1;
 
@@ -32,7 +36,7 @@ impl Clausifier {
 		let quantifier_free = remove_universal_quantifiers(no_existentials);
 		let cnf = flatten_cnf(quantifier_free)?;
 
-		Ok(cnf.0[0].clone()) // Return the first clause from the CNF
+		Ok(cnf) // Return the first clause from the CNF
 	}
 
 	pub fn get_program(&self) -> &Progam {
@@ -198,5 +202,106 @@ fn remove_universal_quantifiers(expr: Expression) -> Expression {
 		),
 		Expression::Not(e) => Expression::Not(Box::new(remove_universal_quantifiers(*e))),
 		other => other,
+	}
+}
+
+#[cfg(test)]
+mod tests {
+	use std::vec;
+
+	use super::*;
+	use crate::types::ast::{Expression, Proposition, Term};
+
+	#[test]
+	fn test_cnf_forall_impl() {
+		let mut clausifier = Clausifier::new();
+		let expr = Expression::ForAll(
+			"X".to_string(),
+			Box::new(Expression::Implies(
+				Box::new(Expression::Proposition(Proposition {
+					name: "P".to_string(),
+					terms: vec![Term::Identifier("X".to_string())],
+				})),
+				Box::new(Expression::Proposition(Proposition {
+					name: "Q".to_string(),
+					terms: vec![Term::Identifier("X".to_string())],
+				})),
+			)),
+		);
+
+		let clause = clausifier.clausify(expr).unwrap();
+
+		let expected_progam = Progam(vec![Clause(vec![
+			Literal::Not(Proposition {
+				name: "P".to_string(),
+				terms: vec![Term::Identifier("X".to_string())],
+			}),
+			Literal::Proposition(Proposition {
+				name: "Q".to_string(),
+				terms: vec![Term::Identifier("X".to_string())],
+			}),
+		])]);
+		assert_eq!(clause, expected_progam);
+	}
+
+	#[test]
+	fn test_cnf_and() {
+		let mut clausifier = Clausifier::new();
+		let expr = Expression::And(
+			Box::new(Expression::Proposition(Proposition {
+				name: "P".to_string(),
+				terms: vec![Term::Identifier("X".to_string())],
+			})),
+			Box::new(Expression::Proposition(Proposition {
+				name: "Q".to_string(),
+				terms: vec![Term::Identifier("Y".to_string())],
+			})),
+		);
+
+		let program = clausifier.clausify(expr).unwrap();
+		let expected_progam = Progam(vec![
+			Clause(vec![Literal::Proposition(Proposition {
+				name: "P".to_string(),
+				terms: vec![Term::Identifier("X".to_string())],
+			})]),
+			Clause(vec![Literal::Proposition(Proposition {
+				name: "Q".to_string(),
+				terms: vec![Term::Identifier("Y".to_string())],
+			})]),
+		]);
+		assert_eq!(program, expected_progam);
+	}
+
+	#[test]
+	fn test_cnf_deskolem() {
+		let mut clausifier = Clausifier::new();
+		let expr = Expression::ForAll(
+			"X".to_string(),
+			Box::new(Expression::Exists(
+				"Y".to_string(),
+				Box::new(Expression::Proposition(Proposition {
+					name: "R".to_string(),
+					terms: vec![
+						Term::Identifier("X".to_string()),
+						Term::Identifier("Y".to_string()),
+					],
+				})),
+			)),
+		);
+
+		let program = clausifier.clausify(expr).unwrap();
+
+		let expected_progam = Progam(vec![Clause(vec![Literal::Proposition(Proposition {
+			name: "R".to_string(),
+			terms: vec![
+				Term::Identifier("X".to_string()),
+				Term::FunctionApplication {
+					name: "_Y_1".to_string(),
+					args: vec![Term::Identifier("X".to_string())],
+				},
+			],
+		})])]);
+
+		assert_eq!(program, expected_progam);
 	}
 }

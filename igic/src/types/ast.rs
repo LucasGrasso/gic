@@ -40,32 +40,22 @@ impl fmt::Display for Term {
 	}
 }
 
+impl fmt::Display for Proposition {
+	fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+		let terms_str: Vec<String> = self
+			.terms
+			.iter()
+			.map(|term| format!("{}", term)) // Recursively call fmt::Display for each term
+			.collect();
+		write!(f, "{}({})", self.name, terms_str.join(", "))
+	}
+}
+
 impl fmt::Display for Expression {
 	fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
 		match self {
 			Expression::Proposition(prop) => {
-				write!(
-					f,
-					"{}({})",
-					prop.name,
-					prop.terms
-						.iter()
-						.map(|t| match t {
-							Term::Identifier(id) => id.clone(),
-							Term::FunctionApplication { name, args } => {
-								format!(
-									"{}({})",
-									name,
-									args.iter()
-										.map(|a| format!("{}", a))
-										.collect::<Vec<String>>()
-										.join(", ")
-								)
-							},
-						})
-						.collect::<Vec<String>>()
-						.join(", ")
-				)
+				write!(f, "{}", prop)
 			},
 			Expression::Bottom => write!(f, "⊥"),
 			Expression::And(left, right) => write!(f, "({} ∧ {})", left, right),

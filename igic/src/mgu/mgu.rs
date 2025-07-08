@@ -37,15 +37,12 @@ pub fn mgu(mut equations: UnificationEquation) -> Result<Substitution> {
 	let mut sub = empty_substitution();
 
 	while let Some(pair) = equations.pop() {
-		println!("Processing pair: {:?}", pair);
 		match decompose(&pair) {
 			Ok(decomposed) => {
-				println!("Decomposed into: {:?}", decomposed);
 				equations.extend(decomposed);
 			},
 			Err(_e) => match delete(&pair) {
 				Ok(new_sub) => {
-					println!("New substitution after delete: {:?}", new_sub);
 					apply_substitution_to_sub(&new_sub, &mut sub);
 					apply_substitution_to_equation(&sub, &mut equations);
 				},
@@ -64,7 +61,7 @@ fn decompose(pair: &UnifiablePair) -> Result<Vec<UnifiablePair>> {
 		(
 			Unifiable::Term(Term::FunctionApplication { name: n1, args: a1 }),
 			Unifiable::Term(Term::FunctionApplication { name: n2, args: a2 }),
-		) if n1 == n2 && a1.len() != a2.len() => Ok(a1
+		) if n1 == n2 && a1.len() == a2.len() => Ok(a1
 			.into_iter()
 			.zip(a2.into_iter())
 			.map(|(l, r)| (Unifiable::Term(l.clone()), Unifiable::Term(r.clone())))
@@ -211,8 +208,25 @@ mod tests {
 		let result = mgu(equations);
 		assert!(result.is_ok());
 		let sub = result.unwrap();
-		println!("Substitution: {:?}", sub);
 		let clause1_sub = apply_substitution(&sub, &clause1);
 		assert_eq!(clause1_sub, clause2);
+	}
+
+	#[test]
+	fn test_trivial_mgu() {
+		let clause1 = Unifiable::Term(Term::Identifier("X".to_string()));
+		let clause2 = Unifiable::Term(Term::Identifier("X".to_string()));
+		let clause3 =
+			Unifiable::Term(Term::FunctionApplication { name: "a".to_string(), args: vec![] });
+		let clause4 =
+			Unifiable::Term(Term::FunctionApplication { name: "a".to_string(), args: vec![] });
+
+		let equations = vec![(clause1, clause2), (clause3, clause4)];
+
+		let result = mgu(equations);
+
+		assert!(result.is_ok());
+		let sub = result.unwrap();
+		assert!(sub.is_empty(), "Expected empty substitution for trivial MGU");
 	}
 }

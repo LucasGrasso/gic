@@ -8,13 +8,7 @@ pub enum Literal {
 	Not(Proposition),
 }
 
-impl Literal {
-	pub fn to_proposition(&self) -> Proposition {
-		match self {
-			Literal::Proposition(p) | Literal::Not(p) => p.clone(),
-		}
-	}
-}
+impl Literal {}
 
 impl fmt::Display for Literal {
 	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -40,7 +34,7 @@ impl fmt::Display for Literal {
 	}
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Clause(pub Vec<Literal>);
 
 impl Clause {
@@ -54,6 +48,10 @@ impl Clause {
 
 	pub fn is_empty(&self) -> bool {
 		self.0.is_empty()
+	}
+
+	pub fn is_goal(&self) -> bool {
+		!(self.0.iter().any(|lit| matches!(lit, Literal::Proposition(_))))
 	}
 
 	pub fn len(&self) -> usize {
@@ -100,8 +98,26 @@ impl fmt::Display for Clause {
 	}
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Progam(pub Vec<Clause>);
+
+impl Progam {
+	pub fn get_clause(&self, index: usize) -> Option<&Clause> {
+		self.0.get(index)
+	}
+
+	pub fn append(&mut self, other: &mut Self) {
+		self.0.append(&mut other.0);
+	}
+
+	pub fn is_horn(&self) -> bool {
+		self.0.iter().all(|clause| {
+			let positive_count =
+				clause.iter().filter(|lit| matches!(lit, Literal::Proposition(_))).count();
+			positive_count <= 1 // At most one positive literal
+		})
+	}
+}
 
 impl IntoIterator for Progam {
 	type Item = Clause;
@@ -118,12 +134,6 @@ impl<'a> IntoIterator for &'a Progam {
 
 	fn into_iter(self) -> Self::IntoIter {
 		self.0.iter()
-	}
-}
-
-impl Progam {
-	pub fn append(&mut self, other: &mut Self) {
-		self.0.append(&mut other.0);
 	}
 }
 

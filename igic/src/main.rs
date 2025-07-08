@@ -4,10 +4,13 @@ use std::fs;
 use crate::clauses::cnf::Clausifier;
 use crate::parser::{parse_formula, parse_gic_file};
 use rustyline::error::ReadlineError;
+use rustyline::history::FileHistory;
+use rustyline::Editor;
 
 mod clauses;
 mod mgu;
 mod parser;
+mod resolution;
 mod types;
 
 fn main() {
@@ -52,8 +55,7 @@ fn main() {
 						let re = Regex::new(r#""(.*?)""#).unwrap();
 						if let Some(caps) = re.captures(&rest_of_line) {
 							let query_input = caps.get(1).unwrap().as_str();
-							println!("Processing query: {}", query_input);
-							query_cmd(&mut clausifier, query_input);
+							query_cmd(&mut clausifier, query_input, &mut rl);
 						} else {
 							eprintln!("Error: Query must be wrapped in double quotes, like: query \"<formula>\"");
 						}
@@ -113,7 +115,7 @@ fn consult_cmd(clausifier: &mut Clausifier, cwd: &std::path::Path, input: &str) 
 	}
 }
 
-fn query_cmd(clausifier: &mut Clausifier, input: &str) {
+fn query_cmd(clausifier: &mut Clausifier, input: &str, rl: &mut Editor<(), FileHistory>) {
 	let query = input.trim();
 
 	if query.is_empty() {
@@ -126,14 +128,16 @@ fn query_cmd(clausifier: &mut Clausifier, input: &str) {
 
 	match parse_formula(&formula) {
 		Ok(expr) => match clausifier.clausify(types::ast::Expression::Not((Box::new(expr)))) {
-			Ok(goal) => {
-				let refutable =
-					mgu::resolution::sld_resolution(clausifier.get_program().clone(), goal);
-				if refutable {
-					println!("The query is refutable.");
-				} else {
-					println!("The query is not refutable.");
-				}
+			Ok(goal_program) => match goal_program.get_clause(0) {
+				Some(goal_clause) => {
+					println!("Goal Clause: {}", goal_clause);
+					resolution::resolution::sld_resolution(
+						&clausifier.get_program(),
+						goal_clause,
+						rl,
+					);
+				},
+				None => eprintln!("No clauses found in the goal program."),
 			},
 			Err(e) => eprintln!("Error clausifying query: {}", e),
 		},
