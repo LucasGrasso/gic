@@ -6,6 +6,7 @@ use crate::mgu::substitution::{
 	self, apply_substitution, apply_substitution_to_clause, apply_substitution_to_sub,
 	empty_substitution,
 };
+use crate::types::ast::Term;
 use crate::types::clause::{self, Clause, Literal, Progam};
 use std::collections::VecDeque;
 
@@ -21,7 +22,7 @@ fn unify_literals(l1: &Literal, l2: &Literal) -> Result<Option<Substitution>> {
 	}
 }
 
-pub fn sld_resolution(progam: &Progam, goal: &Clause, rl: &mut Editor<(), FileHistory>) {
+pub fn sld_resolution(program: &Progam, goal: &Clause, rl: &mut Editor<(), FileHistory>) {
 	if goal.is_empty() {
 		eprintln!("Goal is empty, no resolution needed.");
 		return;
@@ -30,21 +31,32 @@ pub fn sld_resolution(progam: &Progam, goal: &Clause, rl: &mut Editor<(), FileHi
 		eprintln!("Goal is not a valid goal clause.");
 		return;
 	}
-	if progam.0.is_empty() {
+	if program.0.is_empty() {
 		eprintln!("Program is empty, no clauses to resolve.");
 		return;
 	}
-	if !progam.is_horn() {
+	if !program.is_horn() {
 		eprintln!("Program is not a Horn clause program, SLD resolution not applicable.");
 		return;
 	}
 
-	let mut queue: VecDeque<(Clause, Substitution)> = VecDeque::new();
-	queue.push_back((goal.clone(), empty_substitution()));
+	let free_vars = goal.fv();
+	let free_var_terms = free_vars
+		.iter()
+		.map(|var| Unifiable::Term(Term::Identifier(var.clone())))
+		.collect::<Vec<_>>();
 
-	while let Some((current_goal, current_sub)) = queue.pop_front() {
+	let mut stack: VecDeque<(Clause, Substitution)> = VecDeque::new();
+	stack.push_back((goal.clone(), empty_substitution()));
+
+	while let Some((current_goal, current_sub)) = stack.pop_back() {
 		if current_goal.is_empty() {
-			println!("✔ Solution found with substitution: {:?} \n", current_sub);
+			println!("✔ Solution found!");
+			for var in &free_var_terms {
+				if let Some(value) = current_sub.get(var) {
+					println!("{} := {}", var, value);
+				}
+			}
 			let readline = rl.readline("Continue? (Y/N) ");
 			match readline {
 				Ok(input) => {
@@ -57,24 +69,30 @@ pub fn sld_resolution(progam: &Progam, goal: &Clause, rl: &mut Editor<(), FileHi
 				Err(_) => return, // Exit if there's an error reading input
 			}
 		}
-
-		for goal_literal in &current_goal.0 {
-			for clause in &progam.0 {
-				for literal in &clause.0 {
+		if let Some(goal_literal) = current_goal.0.first() {
+			if let Some(new_goal) = built_in_preds(&current_goal, goal_literal, &current_sub) {
+				stack.push_back((new_goal, current_sub.clone()));
+				continue;
+			}
+			for clause in &program.0 {
+				if let Some(literal) = clause.0.first() {
 					match unify_literals(goal_literal, literal) {
 						Ok(Some(mgu_sub)) => {
 							let mut new_sub = current_sub.clone();
 							apply_substitution_to_sub(&mgu_sub, &mut new_sub);
 
-							let mut new_goal = Clause::new();
-							new_goal.0.extend(current_goal.0.iter().skip(1).cloned());
-							new_goal.0.extend(clause.0.iter().cloned());
-							apply_substitution_to_clause(&new_sub, &mut new_goal);
-							println!("new_goal: {:?}", new_goal);
-							queue.push_back((new_goal, new_sub));
+							let mut remaining_goal_lits = current_goal.0.clone();
+							remaining_goal_lits.remove(0);
+
+							let mut new_goal_lits = remaining_goal_lits;
+							new_goal_lits.extend(clause.negatives().into_iter().cloned());
+
+							let mut new_goal = Clause(new_goal_lits);
+							apply_substitution_to_clause(&mgu_sub, &mut new_goal);
+							stack.push_back((new_goal, new_sub));
 						},
 						Ok(None) => continue,
-						Err(e) => {
+						Err(_e) => {
 							continue;
 						},
 					}
@@ -82,6 +100,59 @@ pub fn sld_resolution(progam: &Progam, goal: &Clause, rl: &mut Editor<(), FileHi
 			}
 		}
 	}
-
 	println!("✘ No solution found.");
+}
+
+fn built_in_preds(
+	current_goal: &Clause,
+	goal_literal: &Literal,
+	current_sub: &Substitution,
+) -> Option<Clause> {
+	match goal_literal {
+		Literal::Not(p) if p.name == "Eq" && p.terms.len() == 2 => {
+			let left = apply_substitution(&current_sub, &Unifiable::Term(p.terms[0].clone()));
+			let right = apply_substitution(&current_sub, &Unifiable::Term(p.terms[1].clone()));
+			if left == right {
+				let mut remaining_goal = current_goal.0.clone();
+				remaining_goal.remove(0);
+				return Some(Clause(remaining_goal));
+			} else {
+				return None;
+			}
+		},
+		Literal::Not(p) if p.name == "Diff" && p.terms.len() == 2 => {
+			let left = apply_substitution(&current_sub, &Unifiable::Term(p.terms[0].clone()));
+			let right = apply_substitution(&current_sub, &Unifiable::Term(p.terms[1].clone()));
+			if left != right {
+				let mut remaining_goal = current_goal.0.clone();
+				remaining_goal.remove(0);
+				return Some(Clause(remaining_goal));
+			} else {
+				return None;
+			}
+		},
+		Literal::Proposition(p) if p.name == "Var" && p.terms.len() == 1 => {
+			let term = apply_substitution(current_sub, &Unifiable::Term(p.terms[0].clone()));
+			match term {
+				Unifiable::Term(Term::Identifier(_)) => {
+					let mut remaining_goal = current_goal.0.clone();
+					remaining_goal.remove(0);
+					return Some(Clause(remaining_goal));
+				},
+				_ => None,
+			}
+		},
+		Literal::Proposition(p) if p.name == "Atom" && p.terms.len() == 1 => {
+			let term = apply_substitution(current_sub, &Unifiable::Term(p.terms[0].clone()));
+			match term {
+				Unifiable::Term(Term::FunctionApplication { .. }) => {
+					let mut remaining_goal = current_goal.0.clone();
+					remaining_goal.remove(0);
+					return Some(Clause(remaining_goal));
+				},
+				_ => None,
+			}
+		},
+		_ => None, // not a built-in, proceed with standard resolution
+	}
 }

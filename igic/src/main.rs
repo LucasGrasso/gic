@@ -22,7 +22,6 @@ fn main() {
 		env::current_dir().unwrap()
 	});
 	println!("Welcome to the IGIC REPL! Type 'exit' or 'quit' to leave.");
-	println!("Current directory: {:?}", cwd);
 	let history_path = "igic_history.txt";
 	if rl.load_history(history_path).is_err() {
 		println!("No previous history.");
@@ -47,7 +46,7 @@ fn main() {
 				let command = parts.next().unwrap_or("");
 
 				match command {
-					"consult" => consult_cmd(&mut clausifier, &cwd, parts.next().unwrap_or("")),
+					"load" => load_cmd(&mut clausifier, &cwd, parts.next().unwrap_or("")),
 					"query" => {
 						use regex::Regex;
 						let rest_of_line = parts.collect::<Vec<&str>>().join(" ");
@@ -61,17 +60,15 @@ fn main() {
 						}
 					},
 					_ => println!(
-						"Unknown command: '{}'. Use 'consult <file>', 'exit', or 'quit'.",
+						"Unknown command: '{}'. Use 'load <file>', 'query \"<expr>\"', 'exit', or 'quit'.",
 						command
 					),
 				}
 			},
 			Err(ReadlineError::Interrupted) => {
-				println!("CTRL-C pressed, exiting.");
 				break;
 			},
 			Err(ReadlineError::Eof) => {
-				println!("CTRL-D pressed, exiting.");
 				break;
 			},
 			Err(err) => {
@@ -83,7 +80,7 @@ fn main() {
 	rl.save_history(history_path).unwrap();
 }
 
-fn consult_cmd(clausifier: &mut Clausifier, cwd: &std::path::Path, input: &str) {
+fn load_cmd(clausifier: &mut Clausifier, cwd: &std::path::Path, input: &str) {
 	let filename = cwd.join(input);
 
 	// Check if the filename ends with .gic
@@ -99,6 +96,7 @@ fn consult_cmd(clausifier: &mut Clausifier, cwd: &std::path::Path, input: &str) 
 					println!("--- Expression {} ---", i + 1);
 					println!("{}", expr);
 				}
+				println!("---------------------------------");
 				for expr in expressions {
 					if let Err(e) = clausifier.add_to_progam(expr) {
 						eprintln!("Error clausifying: {}", e);
@@ -126,8 +124,13 @@ fn query_cmd(clausifier: &mut Clausifier, input: &str, rl: &mut Editor<(), FileH
 	let mut formula = query.to_string();
 	formula.push(';');
 
+	if !clausifier.progam_loaded() {
+		eprintln!("Error: No clauses loaded. Please load a .gic file first.");
+		return;
+	}
+
 	match parse_formula(&formula) {
-		Ok(expr) => match clausifier.clausify(types::ast::Expression::Not((Box::new(expr)))) {
+		Ok(expr) => match clausifier.clausify(types::ast::Expression::Not(Box::new(expr))) {
 			Ok(goal_program) => match goal_program.get_clause(0) {
 				Some(goal_clause) => {
 					println!("Goal Clause: {}", goal_clause);

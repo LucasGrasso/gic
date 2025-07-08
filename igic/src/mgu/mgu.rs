@@ -3,12 +3,21 @@ use super::substitution::{
 	empty_substitution,
 };
 use crate::types::ast::{Proposition, Term};
-use std::collections::HashMap;
+use std::{collections::HashMap, fmt};
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum Unifiable {
 	Term(Term),
 	Prop(Proposition),
+}
+
+impl fmt::Display for Unifiable {
+	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+		match self {
+			Unifiable::Term(term) => write!(f, "{}", term),
+			Unifiable::Prop(prop) => write!(f, "{}", prop),
+		}
+	}
 }
 
 pub type UnifiablePair = (Unifiable, Unifiable);

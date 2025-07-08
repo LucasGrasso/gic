@@ -1,0 +1,11 @@
+Father(juan, pepe);
+Father(juan, luis);
+Father(pepe, maria);
+forall A1. forall B1. forall C1. (Father(A1,B1) and Father(B1,C1)) impl Grandpa(A1,C1);
+forall A2. forall B2. forall C2. (Father(A2,B2) and Father(A2,C2) and Diff(B2,C2)) impl Brother(B2,C2);
+
+/*
+L-Formulas  f ::= P(t1,... tn) | bottom | f and f | f or f | f impl f | not f | exists X. f | forall X. f
+or equivalently:
+L-Formulas  f ::= P(t1,... tn) | ⊥ | f ∧ f | f ∨ f | f ⇒ f | ¬ f | ∃ X. f | ∀ X. f
+*/

@@ -1,7 +1,0 @@
-forall T1. forall U1. forall M1. forall N1. (Type(M1, arrow(T1,U1)) and Type(N1, U1)) impl Type(app(M1, N1), U1);
-
-exists M. Type(M, arrow(a,arrow(b,c)));
-
-exists M. Type(M, arrow(a,b));
-
-exists M. Type(M, a);

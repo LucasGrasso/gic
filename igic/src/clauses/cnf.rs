@@ -24,6 +24,10 @@ impl Clausifier {
 		Ok(())
 	}
 
+	pub fn progam_loaded(&self) -> bool {
+		!self.program.0.is_empty()
+	}
+
 	pub fn clausify(&mut self, expr: Expression) -> Result<Progam> {
 		self.ctx.set_clause_id(self.clause_id);
 		self.clause_id += 1;
@@ -54,7 +58,6 @@ fn expr_to_literal(expr: Expression) -> Result<Literal> {
 		_ => Err(GicError::ClauseError(format!("Expression is not a literal: {}", expr))),
 	}
 }
-
 pub fn flatten_cnf(expr: Expression) -> Result<Progam> {
 	match expr {
 		Expression::And(a, b) => {
@@ -74,7 +77,14 @@ pub fn flatten_cnf(expr: Expression) -> Result<Progam> {
 				for Clause(lits_r) in &right {
 					let mut disj = lits_l.clone();
 					disj.extend(lits_r.clone());
-					result.push(Clause(disj));
+
+					// Partition into positives and negatives
+					let (mut positives, mut negatives): (Vec<_>, Vec<_>) =
+						disj.into_iter().partition(|lit| lit.is_positive());
+
+					positives.append(&mut negatives);
+
+					result.push(Clause(positives));
 				}
 			}
 
@@ -83,7 +93,14 @@ pub fn flatten_cnf(expr: Expression) -> Result<Progam> {
 
 		leaf => {
 			let lit = expr_to_literal(leaf)?;
-			Ok(Progam(vec![Clause(vec![lit])]))
+			// Put positive literal first (leaf is a single literal, so just wrap in Vec)
+			let clause_vec = if lit.is_positive() {
+				vec![lit]
+			} else {
+				// If single literal is negative, it goes after positives, so positives empty then negative
+				vec![lit]
+			};
+			Ok(Progam(vec![Clause(clause_vec)]))
 		},
 	}
 }
