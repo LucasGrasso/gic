@@ -109,6 +109,27 @@ impl Clause {
 		}
 		free_vars
 	}
+
+	pub fn suffix_vars(&self, suffix: &str) -> Clause {
+		let new_lits = self
+			.0
+			.iter()
+			.map(|lit| match lit {
+				Literal::Proposition(prop) => {
+					let new_terms =
+						prop.terms.iter().map(|t| t.append_suffix_to_vars(suffix)).collect();
+					Literal::Proposition(Proposition { name: prop.name.clone(), terms: new_terms })
+				},
+				Literal::Not(prop) => {
+					let new_terms =
+						prop.terms.iter().map(|t| t.append_suffix_to_vars(suffix)).collect();
+					Literal::Not(Proposition { name: prop.name.clone(), terms: new_terms })
+				},
+			})
+			.collect();
+
+		Clause(new_lits)
+	}
 }
 
 impl IntoIterator for Clause {

@@ -1,6 +1,5 @@
 use super::substitution::{
-	apply_substitution, apply_substitution_to_equation, apply_substitution_to_sub,
-	empty_substitution,
+	apply_substitution_to_equation, apply_substitution_to_sub, empty_substitution,
 };
 use crate::types::ast::{Proposition, Term};
 use std::{collections::HashMap, fmt};
@@ -30,17 +29,20 @@ pub type Substitution = HashMap<Unifiable, Unifiable>;
 pub enum MguError {
 	Clash(String),
 	UnificationError(String),
-	OccurCheck(String),
+	OccursCheck(String),
+}
+
+impl fmt::Display for MguError {
+	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+		match self {
+			MguError::Clash(msg) => write!(f, "Clash: {}", msg),
+			MguError::UnificationError(msg) => write!(f, "Unification error: {}", msg),
+			MguError::OccursCheck(msg) => write!(f, "Occurs check failed: {}", msg),
+		}
+	}
 }
 
 pub type Result<T> = std::result::Result<T, MguError>;
-
-fn is_var(term: &Unifiable) -> bool {
-	match term {
-		Unifiable::Term(Term::Identifier(_)) => true,
-		_ => false,
-	}
-}
 
 pub fn mgu(mut equations: UnificationEquation) -> Result<Substitution> {
 	let mut sub = empty_substitution();
@@ -110,7 +112,7 @@ fn delete(pair: &UnifiablePair) -> Result<Substitution> {
 			let var = Term::Identifier(id.clone());
 			let term = Term::FunctionApplication { name: name.to_string(), args: args.to_vec() };
 			if occurs_check(&var, &term) {
-				return Err(MguError::OccurCheck(format!("{} occurs in {}", var, term)));
+				return Err(MguError::OccursCheck(format!("{} occurs in {}", var, term)));
 			}
 			let mut sub = empty_substitution();
 			sub.insert(Unifiable::Term(var), Unifiable::Term(term));
@@ -124,7 +126,7 @@ fn delete(pair: &UnifiablePair) -> Result<Substitution> {
 			let var = Term::Identifier(id.clone());
 			let term = Term::FunctionApplication { name: name.to_string(), args: args.to_vec() };
 			if occurs_check(&var, &term) {
-				return Err(MguError::OccurCheck(format!("{} occurs in {}", var, term)));
+				return Err(MguError::OccursCheck(format!("{} occurs in {}", var, term)));
 			}
 			let mut sub = empty_substitution();
 			sub.insert(Unifiable::Term(var), Unifiable::Term(term));
@@ -147,6 +149,7 @@ fn occurs_check(var: &Term, term: &Term) -> bool {
 #[cfg(test)]
 mod tests {
 	use super::*;
+	use crate::mgu::substitution::apply_substitution;
 
 	#[test]
 	fn test_mgu_decompose() {

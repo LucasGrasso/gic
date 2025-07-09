@@ -1,14 +1,14 @@
+use std::collections::VecDeque;
+
 use rustyline::history::FileHistory;
 use rustyline::Editor;
 
 use crate::mgu::mgu::{mgu, Result, Substitution, Unifiable, UnificationEquation};
 use crate::mgu::substitution::{
-	self, apply_substitution, apply_substitution_to_clause, apply_substitution_to_sub,
-	empty_substitution,
+	apply_substitution, apply_substitution_to_clause, apply_substitution_to_sub, empty_substitution,
 };
 use crate::types::ast::Term;
-use crate::types::clause::{self, Clause, Literal, Progam};
-use std::collections::VecDeque;
+use crate::types::clause::{Clause, Literal, Progam};
 
 fn unify_literals(l1: &Literal, l2: &Literal) -> Result<Option<Substitution>> {
 	match (l1, l2) {
@@ -49,14 +49,16 @@ pub fn sld_resolution(program: &Progam, goal: &Clause, rl: &mut Editor<(), FileH
 	let mut stack: VecDeque<(Clause, Substitution)> = VecDeque::new();
 	stack.push_back((goal.clone(), empty_substitution()));
 
-	while let Some((current_goal, current_sub)) = stack.pop_back() {
+	while let Some((current_goal, current_sub)) = stack.pop_front() {
 		if current_goal.is_empty() {
 			println!("✔ Solution found!");
+			let mut bindings = Vec::new();
 			for var in &free_var_terms {
 				if let Some(value) = current_sub.get(var) {
-					println!("{} := {}", var, value);
+					bindings.push(format!("{} := {}", var, value));
 				}
 			}
+			println!("{}", bindings.join(", "));
 			let readline = rl.readline("Continue? (Y/N) ");
 			match readline {
 				Ok(input) => {
@@ -109,50 +111,61 @@ fn built_in_preds(
 	current_sub: &Substitution,
 ) -> Option<Clause> {
 	match goal_literal {
-		Literal::Not(p) if p.name == "Eq" && p.terms.len() == 2 => {
-			let left = apply_substitution(&current_sub, &Unifiable::Term(p.terms[0].clone()));
-			let right = apply_substitution(&current_sub, &Unifiable::Term(p.terms[1].clone()));
-			if left == right {
-				let mut remaining_goal = current_goal.0.clone();
-				remaining_goal.remove(0);
-				return Some(Clause(remaining_goal));
-			} else {
-				return None;
-			}
-		},
-		Literal::Not(p) if p.name == "Diff" && p.terms.len() == 2 => {
-			let left = apply_substitution(&current_sub, &Unifiable::Term(p.terms[0].clone()));
-			let right = apply_substitution(&current_sub, &Unifiable::Term(p.terms[1].clone()));
-			if left != right {
-				let mut remaining_goal = current_goal.0.clone();
-				remaining_goal.remove(0);
-				return Some(Clause(remaining_goal));
-			} else {
-				return None;
-			}
-		},
-		Literal::Proposition(p) if p.name == "Var" && p.terms.len() == 1 => {
-			let term = apply_substitution(current_sub, &Unifiable::Term(p.terms[0].clone()));
-			match term {
-				Unifiable::Term(Term::Identifier(_)) => {
-					let mut remaining_goal = current_goal.0.clone();
-					remaining_goal.remove(0);
-					return Some(Clause(remaining_goal));
+		Literal::Not(p) => {
+			match p.name.as_str() {
+				"Eq" if p.terms.len() == 2 => {
+					let left =
+						apply_substitution(&current_sub, &Unifiable::Term(p.terms[0].clone()));
+					let right =
+						apply_substitution(&current_sub, &Unifiable::Term(p.terms[1].clone()));
+					if left == right {
+						let mut remaining_goal = current_goal.0.clone();
+						remaining_goal.remove(0);
+						return Some(Clause(remaining_goal));
+					} else {
+						return None;
+					}
 				},
-				_ => None,
-			}
-		},
-		Literal::Proposition(p) if p.name == "Atom" && p.terms.len() == 1 => {
-			let term = apply_substitution(current_sub, &Unifiable::Term(p.terms[0].clone()));
-			match term {
-				Unifiable::Term(Term::FunctionApplication { .. }) => {
-					let mut remaining_goal = current_goal.0.clone();
-					remaining_goal.remove(0);
-					return Some(Clause(remaining_goal));
+				"Diff" if p.terms.len() == 2 => {
+					let left =
+						apply_substitution(&current_sub, &Unifiable::Term(p.terms[0].clone()));
+					let right =
+						apply_substitution(&current_sub, &Unifiable::Term(p.terms[1].clone()));
+					if left != right {
+						let mut remaining_goal = current_goal.0.clone();
+						remaining_goal.remove(0);
+						return Some(Clause(remaining_goal));
+					} else {
+						return None;
+					}
 				},
-				_ => None,
+				"Var" if p.terms.len() == 1 => {
+					let term =
+						apply_substitution(current_sub, &Unifiable::Term(p.terms[0].clone()));
+					match term {
+						Unifiable::Term(Term::Identifier(_)) => {
+							let mut remaining_goal = current_goal.0.clone();
+							remaining_goal.remove(0);
+							return Some(Clause(remaining_goal));
+						},
+						_ => None,
+					}
+				},
+				"Atom" if p.terms.len() == 1 => {
+					let term =
+						apply_substitution(current_sub, &Unifiable::Term(p.terms[0].clone()));
+					match term {
+						Unifiable::Term(Term::FunctionApplication { .. }) => {
+							let mut remaining_goal = current_goal.0.clone();
+							remaining_goal.remove(0);
+							return Some(Clause(remaining_goal));
+						},
+						_ => None,
+					}
+				},
+				_ => None, // not a built-in, proceed with standard resolution
 			}
 		},
-		_ => None, // not a built-in, proceed with standard resolution
+		_ => None,
 	}
 }

@@ -18,13 +18,12 @@ This project was made for educational pourposes, to learn about the implementati
 ### Features
 
 - **First Order Logic Parsing**: GIC can parse first order logic expressions.
-- **Prolog-like Syntax**: The language is designed to be similar to Prolog, making it familiar for those who have used Prolog before.
 - **SLD Resolution**: GIC implements SLD resolution for query processing, allowing users to perform logical queries on facts and rules.
 - **Built-in predicates**: Gic supports built-in predicates: `Eq/2`, `Diff/2`, `Atom/1` and `Var/1` for logical operations and variable handling.
 
 ### Syntax
 
-Syntax is FOL-like
+Syntax is FOL-like: If P is a predicate (Uppercase) and t1,...,tn terms such as Variables or function applications(Lowercase), then the syntax for L-Formulas is as follows:
 
 ```
 L-Formulas f ::= P(t1,... tn) | bottom | f and f | f or f | f impl f | not f | exists X. f | forall X. f
@@ -34,22 +33,34 @@ L-Formulas f ::= P(t1,... tn) | ⊥ | f ∧ f | f ∨ f | f ⇒ f | ¬ f | ∃ X
 ```
 
 You can use any of the symbols interchangeably.
+A .gic file consists of a set of L-Formulas separated by `;`.
 
 ### Usage
 
-To use GIC, you can run the interpreter with a file containing your logic program. The program should be written in the GIC syntax.
+To use GIC, you can run the **igic** interpreter and load a file containing your logic program. The program should be written in the GIC syntax.
 
 ### Example
-
-You can run the gic interpreter, **igic**, from the command line:
 
 ```bash
 cd igic
 cargo run
-igic> load ..\family.gic
+Welcome to the IGIC REPL! Type 'exit' or 'quit' to leave.
+igic> load ..\examples\family.gic
 igic> query "Exists X. Exists Y. Grandpa(X,Y)"
-...
+Goal Clause: {¬Grandpa(X, Y)}
+✔ Solution found!
+X := juan(), Y := maria()
+Continue? (Y/N) Y
+✘ No solution found.
 igic> query "∃ X. ∃ Y. Brother(X,Y)"
+Goal Clause: {¬Brother(X, Y)}
+✔ Solution found!
+X := luis(), Y := pepe()
+Continue? (Y/N) Y
+✔ Solution found!
+X := pepe(), Y := luis()
+Continue? (Y/N) Y
+✘ No solution found.
 ```
 
 ### Current limitations

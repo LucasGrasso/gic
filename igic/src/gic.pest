@@ -2,8 +2,8 @@ upper       = _{ 'A'..'Z' }
 lower       = _{ 'a'..'z' }
 digit 	  = _{ '0'..'9' }
 nothing   = _{ "" }
-alphanum_lower = _{ lower | digit }
-alphanum_upper    = _{ upper | digit }
+alphanum_lower = _{ lower | digit | "_" }
+alphanum_upper    = _{ upper | digit | "_" }
 
 WHITESPACE  = _{ " " | "\t" | "\r" | "\n" }
 COMMENT     = _{ "//" ~ (!"\n" ~ ANY)* ~ ("\n" | EOI)
@@ -14,8 +14,10 @@ cnt       = @{ alphanum_lower+ }
 
 term_args  = _{ term ~ ("," ~ term)* }
 
-term       = _{ var | func | cnt  }
 func       = { cnt ~ "(" ~ term_args ~ ")" }
+list_empty = { "[" ~ "]" }
+list_cons  = { "[" ~ term ~ "|" ~ term ~ "]" }
+term        = _{ var | func | cnt | list_empty | list_cons }
 
 identifier = @{ upper ~ (alphanum_lower)* }
 predicate   = { identifier ~ "(" ~ term_args ~ ")" }

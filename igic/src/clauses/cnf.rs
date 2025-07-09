@@ -1,6 +1,6 @@
 use super::skolem::SkolemContext;
 use crate::types::ast::Expression;
-use crate::types::clause::{self, Clause, Literal, Progam};
+use crate::types::clause::{Clause, Literal, Progam};
 use crate::types::{GicError, Result}; // adjust path as needed
 
 pub struct Clausifier {

@@ -1,0 +1,8 @@
+Friend(john, mary);
+Friend(john, alice);
+Friend(mary, alice);
+Friend(mary, bob);
+Friend(john, martin);
+forall P1. List_of_friends(P1, []);
+forall P2. forall X2. forall XS2.
+  (Friend(P2, X2) and List_of_friends(P2, XS2)) impl List_of_friends(P2, [X2|XS2]);

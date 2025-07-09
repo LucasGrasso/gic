@@ -9,7 +9,6 @@ use std::hash::Hash;
 pub enum GicError {
 	ParseError(String),
 	SemanticError(String),
-	ReadlineError(String),
 	ClauseError(String),
 }
 
@@ -39,7 +38,6 @@ impl fmt::Display for GicError {
 		match self {
 			GicError::ParseError(msg) => write!(f, "Parse error: {}", msg),
 			GicError::SemanticError(msg) => write!(f, "Semantic error: {}", msg),
-			GicError::ReadlineError(msg) => write!(f, "Readline error: {}", msg),
 			GicError::ClauseError(msg) => write!(f, "Clause error: {}", msg),
 		}
 	}
