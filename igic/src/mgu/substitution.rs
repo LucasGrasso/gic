@@ -87,3 +87,12 @@ pub fn apply_substitution_to_sub(s1: &Substitution, s2: &mut Substitution) {
 	}
 	s2.extend(s1.clone());
 }
+
+/* pub fn print_substitution(sub: &Substitution) {
+	println!("{{ ");
+	for (k, v) in sub.iter() {
+		println!("{} -> {}", k, v);
+	}
+	println!("}}");
+}
+ */

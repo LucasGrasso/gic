@@ -111,9 +111,9 @@ fn delete(pair: &UnifiablePair) -> Result<Substitution> {
 		) => {
 			let var = Term::Identifier(id.clone());
 			let term = Term::FunctionApplication { name: name.to_string(), args: args.to_vec() };
-			if occurs_check(&var, &term) {
+			/* if occurs_check(&var, &term) {
 				return Err(MguError::OccursCheck(format!("{} occurs in {}", var, term)));
-			}
+			} */
 			let mut sub = empty_substitution();
 			sub.insert(Unifiable::Term(var), Unifiable::Term(term));
 			return Ok(sub);

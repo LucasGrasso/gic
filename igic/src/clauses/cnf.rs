@@ -16,11 +16,9 @@ impl Clausifier {
 
 	pub fn add_to_progam(&mut self, expr: Expression) -> Result<()> {
 		let progamified_clause = self.clausify(expr)?;
-		let clause = progamified_clause
-			.0
-			.first()
-			.ok_or_else(|| GicError::ClauseError("No clauses generated".to_string()))?;
-		self.program.0.push(clause.clone());
+		for c in progamified_clause.0.iter() {
+			self.program.0.push(c.clone());
+		}
 		Ok(())
 	}
 

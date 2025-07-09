@@ -1,0 +1,7 @@
+Subsequence([],[]).
+forall X1. forall Y1. forall XS1. forall XS2. Subsequence(XS1,YS1) impl 
+  Subsequence([X1|XS1], [X1|YS1]).
+forall X2. forall XS2. forall YS2. Subsequence(XS2, YS2) impl Subsequence([X2|XS2], YS2).
+
+Friends(john, [mary, tom]).
+forall P1. forall F1. (Friends(P1,FL1) and Elem(FL1, F1)) impl Friend(P1, F1).

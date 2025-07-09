@@ -42,7 +42,7 @@ impl fmt::Display for Literal {
 	}
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct Clause(pub Vec<Literal>);
 
 impl Clause {

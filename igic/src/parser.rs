@@ -206,3 +206,80 @@ fn parse_term(pair: Pair<Rule>) -> Result<Term> {
 		_ => Err(GicError::SemanticError(format!("Unexpected rule in term: {:?}", pair.as_rule()))),
 	}
 }
+
+#[cfg(test)]
+mod tests {
+	use super::*;
+	use crate::parser::{parse_term, TokenParser};
+	use pest::Parser;
+
+	fn parse_list(input: &str) -> Term {
+		// We cheat by parsing a dummy predicate around the list,
+		// e.g. "p(<list>)", then extracting the sole term.
+		let wrapped = format!("p({});", input);
+		let mut exprs = parse_gic_file(&wrapped).unwrap();
+		if let Expression::Proposition(prop) = exprs.pop().unwrap() {
+			prop.terms.into_iter().next().unwrap()
+		} else {
+			panic!("Expected proposition");
+		}
+	}
+
+	#[test]
+	fn test_empty_list() {
+		assert_eq!(
+			parse_list("[]"),
+			Term::FunctionApplication { name: "empty_list".into(), args: vec![] }
+		);
+	}
+
+	#[test]
+	fn test_plain_list() {
+		// [a,b,c] → cons(a, cons(b, cons(c, empty_list())))
+		let t = parse_list("[a,b,c]");
+		let expected = Term::FunctionApplication {
+			name: "cons".into(),
+			args: vec![
+				Term::Identifier("a".into()),
+				Term::FunctionApplication {
+					name: "cons".into(),
+					args: vec![
+						Term::Identifier("b".into()),
+						Term::FunctionApplication {
+							name: "cons".into(),
+							args: vec![
+								Term::Identifier("c".into()),
+								Term::FunctionApplication {
+									name: "empty_list".into(),
+									args: vec![],
+								},
+							],
+						},
+					],
+				},
+			],
+		};
+		assert_eq!(t, expected);
+	}
+
+	#[test]
+	fn test_list_cons_with_list_tail() {
+		// [a|[b,c]] → cons(a, cons(b, cons(c, empty_list())))
+		let t = parse_list("[a|[b,c]]");
+		// it should flatten into the same as above
+		assert_eq!(format!("{}", t), "[a, b, c]");
+	}
+
+	#[test]
+	fn test_list_cons_with_var_tail() {
+		// [H|T] → cons(H, T)
+		let t = parse_list("[H|T]");
+		assert_eq!(
+			t,
+			Term::FunctionApplication {
+				name: "cons".into(),
+				args: vec![Term::Identifier("H".into()), Term::Identifier("T".into())],
+			}
+		);
+	}
+}

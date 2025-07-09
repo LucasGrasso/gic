@@ -19,7 +19,7 @@ This project was made for educational pourposes, to learn about the implementati
 
 - **First Order Logic Parsing**: GIC can parse first order logic expressions.
 - **SLD Resolution**: GIC implements SLD resolution for query processing, allowing users to perform logical queries on facts and rules.
-- **Built-in predicates**: Gic supports built-in predicates: `Eq/2`, `Diff/2`, `Atom/1` and `Var/1` for logical operations and variable handling.
+- **Built-in predicates**: Gic supports built-in predicates: `Eq/2`, `Diff/2`, and `Var/1` for logical operations and variable handling.
 
 ### Syntax
 
@@ -33,7 +33,7 @@ L-Formulas f ::= P(t1,... tn) | ⊥ | f ∧ f | f ∨ f | f ⇒ f | ¬ f | ∃ X
 ```
 
 You can use any of the symbols interchangeably.
-A .gic file consists of a set of L-Formulas separated by `;`.
+A .gic file consists of a set of L-Formulas separated by `.`.
 
 ### Usage
 

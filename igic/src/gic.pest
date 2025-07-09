@@ -58,5 +58,5 @@ prefix  = { not_op| quantifier_expr }
 primary = { predicate | bottom | "(" ~ expr ~ ")"}
 infix   = { and_op | or_op | impl_op }
 
-clause      = { expr ~ ";" }
+clause      = { expr ~ "." }
 file        = { SOI ~ ( clause ~ WHITESPACE? )* ~ EOI }

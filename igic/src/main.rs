@@ -1,3 +1,4 @@
+use colored::*;
 use std::env;
 use std::fs;
 
@@ -85,7 +86,7 @@ fn load_cmd(clausifier: &mut Clausifier, cwd: &std::path::Path, input: &str) {
 
 	// Check if the filename ends with .gic
 	if filename.extension().is_none() || filename.extension().unwrap() != "gic" {
-		eprintln!("Error: File must have a .gic extension.");
+		eprintln!("{}", "Error: File must have a .gic extension.".red());
 		return;
 	}
 
@@ -94,13 +95,12 @@ fn load_cmd(clausifier: &mut Clausifier, cwd: &std::path::Path, input: &str) {
 			Ok(expressions) => {
 				for expr in expressions {
 					if let Err(e) = clausifier.add_to_progam(expr) {
-						eprintln!("Error clausifying: {}", e);
+						eprintln!("{}", format!("Error clausifying: {}", e).red());
 					}
 				}
-				println!("Current CNF Program:");
-				println!("{}", clausifier.get_program());
+				println!("{}", "loaded.".green());
 			},
-			Err(e) => eprintln!("Parse error: {}", e),
+			Err(e) => eprintln!("{}", format!("Parse error: {}", e).red()),
 		},
 		Err(e) => {
 			eprintln!("Error reading file '{}': {}", filename.to_string_lossy(), e)
@@ -128,7 +128,6 @@ fn query_cmd(clausifier: &mut Clausifier, input: &str, rl: &mut Editor<(), FileH
 		Ok(expr) => match clausifier.clausify(types::ast::Expression::Not(Box::new(expr))) {
 			Ok(goal_program) => match goal_program.get_clause(0) {
 				Some(goal_clause) => {
-					println!("Goal Clause: {}", goal_clause);
 					resolution::resolution::sld_resolution(
 						&clausifier.get_program(),
 						goal_clause,
