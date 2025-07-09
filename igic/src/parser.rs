@@ -177,8 +177,23 @@ fn parse_term(pair: Pair<Rule>) -> Result<Term> {
 			Ok(Term::FunctionApplication { name, args: args? })
 		},
 
+		Rule::list => parse_term(pair.into_inner().next().unwrap()),
+
 		Rule::list_empty => {
 			Ok(Term::FunctionApplication { name: "empty_list".to_string(), args: vec![] })
+		},
+
+		Rule::list_plain => {
+			let inner = pair.into_inner();
+			let items: Vec<Term> = inner.map(parse_term).collect::<Result<_>>()?;
+			let list = items.into_iter().rfold(
+				Term::FunctionApplication { name: "empty_list".to_string(), args: vec![] },
+				|tail, head| Term::FunctionApplication {
+					name: "cons".to_string(),
+					args: vec![head, tail],
+				},
+			);
+			Ok(list)
 		},
 
 		Rule::list_cons => {

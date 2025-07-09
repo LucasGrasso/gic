@@ -92,11 +92,6 @@ fn load_cmd(clausifier: &mut Clausifier, cwd: &std::path::Path, input: &str) {
 	match fs::read_to_string(&filename) {
 		Ok(content) => match parse_gic_file(&content) {
 			Ok(expressions) => {
-				for (i, expr) in expressions.iter().enumerate() {
-					println!("--- Expression {} ---", i + 1);
-					println!("{}", expr);
-				}
-				println!("---------------------------------");
 				for expr in expressions {
 					if let Err(e) = clausifier.add_to_progam(expr) {
 						eprintln!("Error clausifying: {}", e);

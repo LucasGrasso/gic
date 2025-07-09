@@ -58,7 +58,9 @@ pub fn sld_resolution(program: &Progam, goal: &Clause, rl: &mut Editor<(), FileH
 					bindings.push(format!("{} := {}", var, value));
 				}
 			}
-			println!("{}", bindings.join(", "));
+			if !bindings.is_empty() {
+				println!("{}", bindings.join(", "));
+			}
 			let readline = rl.readline("Continue? (Y/N) ");
 			match readline {
 				Ok(input) => {

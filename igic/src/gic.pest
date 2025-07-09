@@ -15,9 +15,12 @@ cnt       = @{ alphanum_lower+ }
 term_args  = _{ term ~ ("," ~ term)* }
 
 func       = { cnt ~ "(" ~ term_args ~ ")" }
+
 list_empty = { "[" ~ "]" }
-list_cons  = { "[" ~ term ~ "|" ~ term ~ "]" }
-term        = _{ var | func | cnt | list_empty | list_cons }
+list_plain = { "[" ~ term ~ ("," ~ term)* ~ "]" }
+list_cons  = { "[" ~ term ~ "|" ~ list ~ "]" | "[" ~ term ~ "|" ~ var ~ "]"}
+list      = _{ list_empty | list_cons | list_plain }
+term        = _{ var | func | cnt | list }
 
 identifier = @{ upper ~ (alphanum_lower)* }
 predicate   = { identifier ~ "(" ~ term_args ~ ")" }
