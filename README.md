@@ -11,7 +11,7 @@ __________\////////////____\///////////________\/////////__
 
 ```
 
-# GIC - The progamming language for FOL
+# GIC - The programming language for FOL
 
 This project was made for educational pourposes, to learn about the implementation of a programming language.
 
@@ -65,5 +65,5 @@ Continue? (Y/N) Y
 
 ### Current limitations
 
-- **Different Named variables**: GIC does not currently support different named variables for a progam, so please rename accordingly.
-- **Only SLD Resolution**: GIC only implements SLD resolution, for horn progams and objective clauses, which may not be suitable for all use cases.
+- **Different Named variables**: GIC does not currently support different named variables for a program, so please rename accordingly.
+- **Only SLD Resolution**: GIC only implements SLD resolution, for horn programs and objective clauses, which may not be suitable for all use cases.

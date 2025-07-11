@@ -164,9 +164,9 @@ impl fmt::Display for Clause {
 }
 
 #[derive(Debug, Clone, PartialEq)]
-pub struct Progam(pub Vec<Clause>);
+pub struct Program(pub Vec<Clause>);
 
-impl Progam {
+impl Program {
 	pub fn get_clause(&self, index: usize) -> Option<&Clause> {
 		self.0.get(index)
 	}
@@ -188,7 +188,7 @@ impl Progam {
 	}
 }
 
-impl IntoIterator for Progam {
+impl IntoIterator for Program {
 	type Item = Clause;
 	type IntoIter = std::vec::IntoIter<Clause>;
 
@@ -197,7 +197,7 @@ impl IntoIterator for Progam {
 	}
 }
 
-impl<'a> IntoIterator for &'a Progam {
+impl<'a> IntoIterator for &'a Program {
 	type Item = &'a Clause;
 	type IntoIter = std::slice::Iter<'a, Clause>;
 
@@ -206,7 +206,7 @@ impl<'a> IntoIterator for &'a Progam {
 	}
 }
 
-impl fmt::Display for Progam {
+impl fmt::Display for Program {
 	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
 		writeln!(f, "{{")?;
 		for clause in &self.0 {

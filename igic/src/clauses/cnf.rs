@@ -1,32 +1,32 @@
 use super::skolem::SkolemContext;
 use crate::types::ast::Expression;
-use crate::types::clause::{Clause, Literal, Progam};
+use crate::types::clause::{Clause, Literal, Program};
 use crate::types::{GicError, Result}; // adjust path as needed
 
 pub struct Clausifier {
 	clause_id: usize,
 	ctx: SkolemContext,
-	program: Progam,
+	program: Program,
 }
 
 impl Clausifier {
 	pub fn new() -> Self {
-		Clausifier { clause_id: 1, ctx: SkolemContext::new(), program: Progam(Vec::new()) }
+		Clausifier { clause_id: 1, ctx: SkolemContext::new(), program: Program(Vec::new()) }
 	}
 
-	pub fn add_to_progam(&mut self, expr: Expression) -> Result<()> {
-		let progamified_clause = self.clausify(expr)?;
-		for c in progamified_clause.0.iter() {
+	pub fn add_to_program(&mut self, expr: Expression) -> Result<()> {
+		let programified_clause = self.clausify(expr)?;
+		for c in programified_clause.0.iter() {
 			self.program.0.push(c.clone());
 		}
 		Ok(())
 	}
 
-	pub fn progam_loaded(&self) -> bool {
+	pub fn program_loaded(&self) -> bool {
 		!self.program.0.is_empty()
 	}
 
-	pub fn clausify(&mut self, expr: Expression) -> Result<Progam> {
+	pub fn clausify(&mut self, expr: Expression) -> Result<Program> {
 		self.ctx.set_clause_id(self.clause_id);
 		self.clause_id += 1;
 
@@ -41,7 +41,7 @@ impl Clausifier {
 		Ok(cnf) // Return the first clause from the CNF
 	}
 
-	pub fn get_program(&self) -> &Progam {
+	pub fn get_program(&self) -> &Program {
 		&self.program
 	}
 }
@@ -56,7 +56,7 @@ fn expr_to_literal(expr: Expression) -> Result<Literal> {
 		_ => Err(GicError::ClauseError(format!("Expression is not a literal: {}", expr))),
 	}
 }
-pub fn flatten_cnf(expr: Expression) -> Result<Progam> {
+pub fn flatten_cnf(expr: Expression) -> Result<Program> {
 	match expr {
 		Expression::And(a, b) => {
 			let mut left_clauses = flatten_cnf(*a)?;
@@ -86,7 +86,7 @@ pub fn flatten_cnf(expr: Expression) -> Result<Progam> {
 				}
 			}
 
-			Ok(Progam(result))
+			Ok(Program(result))
 		},
 
 		leaf => {
@@ -98,7 +98,7 @@ pub fn flatten_cnf(expr: Expression) -> Result<Progam> {
 				// If single literal is negative, it goes after positives, so positives empty then negative
 				vec![lit]
 			};
-			Ok(Progam(vec![Clause(clause_vec)]))
+			Ok(Program(vec![Clause(clause_vec)]))
 		},
 	}
 }
@@ -246,7 +246,7 @@ mod tests {
 
 		let clause = clausifier.clausify(expr).unwrap();
 
-		let expected_progam = Progam(vec![Clause(vec![
+		let expected_program = Program(vec![Clause(vec![
 			Literal::Not(Proposition {
 				name: "P".to_string(),
 				terms: vec![Term::Identifier("X".to_string())],
@@ -256,7 +256,7 @@ mod tests {
 				terms: vec![Term::Identifier("X".to_string())],
 			}),
 		])]);
-		assert_eq!(clause, expected_progam);
+		assert_eq!(clause, expected_program);
 	}
 
 	#[test]
@@ -274,7 +274,7 @@ mod tests {
 		);
 
 		let program = clausifier.clausify(expr).unwrap();
-		let expected_progam = Progam(vec![
+		let expected_program = Program(vec![
 			Clause(vec![Literal::Proposition(Proposition {
 				name: "P".to_string(),
 				terms: vec![Term::Identifier("X".to_string())],
@@ -284,7 +284,7 @@ mod tests {
 				terms: vec![Term::Identifier("Y".to_string())],
 			})]),
 		]);
-		assert_eq!(program, expected_progam);
+		assert_eq!(program, expected_program);
 	}
 
 	#[test]
@@ -306,7 +306,7 @@ mod tests {
 
 		let program = clausifier.clausify(expr).unwrap();
 
-		let expected_progam = Progam(vec![Clause(vec![Literal::Proposition(Proposition {
+		let expected_program = Program(vec![Clause(vec![Literal::Proposition(Proposition {
 			name: "R".to_string(),
 			terms: vec![
 				Term::Identifier("X".to_string()),
@@ -317,6 +317,6 @@ mod tests {
 			],
 		})])]);
 
-		assert_eq!(program, expected_progam);
+		assert_eq!(program, expected_program);
 	}
 }

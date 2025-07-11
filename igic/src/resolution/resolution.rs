@@ -12,9 +12,9 @@ use crate::mgu::substitution::{
 	empty_substitution, print_substitution,
 };
 use crate::types::ast::Term;
-use crate::types::clause::{Clause, Literal, Progam};
+use crate::types::clause::{Clause, Literal, Program};
 
-pub fn sld_resolution(program: &Progam, goal: &Clause, rl: &mut Editor<(), FileHistory>) {
+pub fn sld_resolution(program: &Program, goal: &Clause, rl: &mut Editor<(), FileHistory>) {
 	if goal.is_empty() {
 		eprintln!("Goal is empty, no resolution needed.");
 		return;

@@ -49,8 +49,8 @@ fn main() {
 
 				match command {
 					"load" => load_cmd(&mut clausifier, &cwd, parts.next().unwrap_or("")),
-					"progam" => {
-						if clausifier.progam_loaded() {
+					"program" => {
+						if clausifier.program_loaded() {
 							println!("{}", clausifier.get_program());
 						} else {
 							eprintln!("No program loaded. Please load a .gic file first.");
@@ -102,7 +102,7 @@ fn load_cmd(clausifier: &mut Clausifier, cwd: &std::path::Path, input: &str) {
 		Ok(content) => match parse_gic_file(&content) {
 			Ok(expressions) => {
 				for expr in expressions {
-					if let Err(e) = clausifier.add_to_progam(expr) {
+					if let Err(e) = clausifier.add_to_program(expr) {
 						eprintln!("{}", format!("Error clausifying: {}", e).red());
 					}
 				}
@@ -127,7 +127,7 @@ fn query_cmd(clausifier: &mut Clausifier, input: &str, rl: &mut Editor<(), FileH
 	let mut formula = query.to_string();
 	formula.push(';');
 
-	if !clausifier.progam_loaded() {
+	if !clausifier.program_loaded() {
 		eprintln!("Error: No clauses loaded. Please load a .gic file first.");
 		return;
 	}
