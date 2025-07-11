@@ -19,7 +19,7 @@ This project was made for educational pourposes, to learn about the implementati
 
 - **First Order Logic Parsing**: GIC can parse first order logic expressions.
 - **SLD Resolution**: GIC implements SLD resolution for query processing, allowing users to perform logical queries on facts and rules.
-- **Built-in predicates**: Gic supports built-in predicates: `Eq/2`, `Diff/2`, and `Var/1` for logical operations and variable handling.
+- **Built-in predicates**: Gic supports built-in predicates: Check `Builtins.md` for more information.
 
 ### Syntax
 
@@ -62,8 +62,3 @@ X := pepe(), Y := luis()
 Continue? (Y/N) Y
 ✘ No solution found.
 ```
-
-### Current limitations
-
-- **Different Named variables**: GIC does not currently support different named variables for a program, so please rename accordingly.
-- **Only SLD Resolution**: GIC only implements SLD resolution, for horn programs and objective clauses, which may not be suitable for all use cases.
