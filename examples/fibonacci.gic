@@ -1,0 +1,10 @@
+Fib(0,0).
+Fib(1,1).
+(
+	Gt(N,1) and
+	Sub(N,1,N1) and
+	Fib(N1,F1) and
+	Sub(N,2,N2) and
+	Fib(N2,F2) and
+	Add(F1,F2,F)
+) impl Fib(N,F).

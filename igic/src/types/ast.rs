@@ -4,6 +4,7 @@ use std::fmt;
 pub enum Term {
 	Identifier(String),
 	FunctionApplication { name: String, args: Vec<Term> },
+	Number(i64),
 }
 
 impl Term {
@@ -15,6 +16,7 @@ impl Term {
 					args.iter().map(|arg| arg.append_suffix_to_vars(suffix)).collect();
 				Term::FunctionApplication { name: name.clone(), args: new_args }
 			},
+			Term::Number(n) => Term::Number(*n),
 		};
 		new_term
 	}
@@ -60,6 +62,7 @@ impl fmt::Display for Term {
 					write!(f, "{}({})", name, args_str.join(", "))
 				}
 			},
+			Term::Number(n) => write!(f, "{}", n),
 		}
 	}
 }

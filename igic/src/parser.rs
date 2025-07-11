@@ -203,6 +203,14 @@ fn parse_term(pair: Pair<Rule>) -> Result<Term> {
 			Ok(Term::FunctionApplication { name: "cons".to_string(), args: vec![head, tail] })
 		},
 
+		Rule::number => {
+			let num_str = pair.as_str();
+			num_str
+				.parse::<i64>()
+				.map(Term::Number)
+				.map_err(|_| GicError::SemanticError(format!("Invalid number: {}", num_str)))
+		},
+
 		_ => Err(GicError::SemanticError(format!("Unexpected rule in term: {:?}", pair.as_rule()))),
 	}
 }

@@ -4,11 +4,14 @@ use std::collections::VecDeque;
 use rustyline::history::FileHistory;
 use rustyline::Editor;
 
+use crate::builtins::integers::arithmetic::{arithmetic_builtin, compare_builtin};
+use crate::builtins::lists::lists_builtins::{is_list, list_elem, list_length};
 use crate::mgu::mgu::{mgu, Result, Substitution, Unifiable, UnificationEquation};
 use crate::mgu::substitution::{
-	apply_substitution, apply_substitution_to_clause, apply_substitution_to_sub, empty_substitution,
+	apply_substitution, apply_substitution_to_clause, apply_substitution_to_sub,
+	empty_substitution, print_substitution,
 };
-use crate::types::ast::{Proposition, Term};
+use crate::types::ast::Term;
 use crate::types::clause::{Clause, Literal, Progam};
 
 pub fn sld_resolution(program: &Progam, goal: &Clause, rl: &mut Editor<(), FileHistory>) {
@@ -52,6 +55,9 @@ pub fn sld_resolution(program: &Progam, goal: &Clause, rl: &mut Editor<(), FileH
 			} else {
 				println!("{}", bindings.join(", "));
 			}
+			if stack.is_empty() {
+				return;
+			}
 			let readline = rl.readline("Continue? (Y/N) ");
 			match readline {
 				Ok(input) => {
@@ -67,16 +73,22 @@ pub fn sld_resolution(program: &Progam, goal: &Clause, rl: &mut Editor<(), FileH
 		if let Some(goal_literal) = current_goal.0.first() {
 			if let Some(branches) = built_in_preds(&current_goal, goal_literal, &current_sub) {
 				for (new_goal, new_sub) in branches {
+					println!("Resolving built-in predicate: {}", goal_literal);
+					println!("New goal: {}", new_goal);
 					stack.push_back((new_goal, new_sub));
 				}
 				continue;
 			}
+			println!("Resolving: {}", current_goal);
+			println!("Current substitution: ");
+			print_substitution(&current_sub);
 			for clause in &program.0 {
 				clause_counter += 1;
 				let unique_suffix = format!("_{}", clause_counter);
 				let std_clause = clause.suffix_vars(&unique_suffix);
 				if let Some(literal) = std_clause.0.first() {
 					if let Ok(Some(mgu_sub)) = unify_literals(goal_literal, literal) {
+						println!("Unifying with clause: {}", std_clause);
 						let mut new_sub = current_sub.clone();
 						apply_substitution_to_sub(&mgu_sub, &mut new_sub);
 
@@ -86,11 +98,13 @@ pub fn sld_resolution(program: &Progam, goal: &Clause, rl: &mut Editor<(), FileH
 
 						let mut new_goal = Clause(new_goal_lits);
 						apply_substitution_to_clause(&mgu_sub, &mut new_goal);
+						println!("New goal after unification: {}", new_goal);
 						stack.push_back((new_goal, new_sub));
 					}
 				}
 			}
 		}
+		println!("")
 	}
 	println!("{}", "false.".red());
 }
@@ -141,115 +155,31 @@ fn built_in_preds(
 					return Some(vec![(Clause(rem), sub.clone())]);
 				}
 			},
-			("Is_list", 1) => {
-				if let Unifiable::Term(Term::FunctionApplication { name, args }) =
-					apply_substitution(sub, &Unifiable::Term(p.terms[0].clone()))
-				{
-					if (name == "cons" && args.len() == 2)
-						|| (name == "empty_list" && args.is_empty())
-					{
-						let mut rem = goal.0.clone();
-						rem.remove(0);
-						return Some(vec![(Clause(rem), sub.clone())]);
+			("Add", 3) => return arithmetic_builtin(goal, p, sub, |a, b| a + b),
+			("Sub", 3) => return arithmetic_builtin(goal, p, sub, |a, b| a - b),
+			("Mul", 3) => return arithmetic_builtin(goal, p, sub, |a, b| a * b),
+			("Div", 3) => {
+				return arithmetic_builtin(goal, p, sub, |a, b| {
+					if b == 0 {
+						panic!("Division by zero");
 					}
-				}
+					a / b
+				});
 			},
+			("Mod", 3) => return arithmetic_builtin(goal, p, sub, |a, b| a % b),
+			("Lt", 2) => return compare_builtin(goal, p, sub, |a, b| a < b),
+			("Lt_eq", 2) => return compare_builtin(goal, p, sub, |a, b| a <= b),
+			("Gt", 2) => return compare_builtin(goal, p, sub, |a, b| a > b),
+			("Gt_eq", 2) => return compare_builtin(goal, p, sub, |a, b| a >= b),
+			("Eq_int", 2) => return compare_builtin(goal, p, sub, |a, b| a == b),
+			("Diff_int", 2) => return compare_builtin(goal, p, sub, |a, b| a != b),
+			("Is_list", 1) => return is_list(sub, p, goal),
 			("Length", 2) => {
-				return built_in_preds_length(goal, p, sub).map(|cl| vec![cl]);
+				return list_length(goal, p, sub).map(|cl| vec![cl]);
 			},
-			("Elem", 2) => {
-				let list_uv = apply_substitution(sub, &Unifiable::Term(p.terms[0].clone()));
-				match list_uv {
-					Unifiable::Term(Term::FunctionApplication { name, args })
-						if name == "cons" && args.len() == 2 =>
-					{
-						let head = args[0].clone();
-						let tail = args[1].clone();
-						let elem = p.terms[1].clone();
-
-						// R1: elem = head
-						let mut temp_sub: std::collections::HashMap<Unifiable, Unifiable> =
-							empty_substitution();
-						temp_sub
-							.insert(Unifiable::Term(elem.clone()), Unifiable::Term(head.clone()));
-
-						let mut new_sub = sub.clone();
-						apply_substitution_to_sub(&temp_sub, &mut new_sub);
-
-						let mut g1 = goal.0.clone();
-						g1.remove(0);
-						let clause1 = Clause(g1);
-
-						// R2: Elem(tail, elem)
-						let mut g2 = goal.0.clone();
-						g2.remove(0);
-						g2.insert(
-							0,
-							Literal::Not(Proposition {
-								name: "Elem".into(),
-								terms: vec![tail.clone(), elem.clone()],
-							}),
-						);
-						let clause2 = Clause(g2);
-
-						return Some(vec![(clause1, new_sub), (clause2, sub.clone())]);
-					},
-					Unifiable::Term(Term::FunctionApplication { name, args })
-						if name == "empty_list" && args.is_empty() =>
-					{
-						return None;
-					},
-					_ => {},
-				}
-			},
-			_ => {},
+			("Elem", 2) => return list_elem(goal, p, sub),
+			_ => return None,
 		}
 	}
 	None
-}
-
-fn built_in_preds_length(
-	goal: &Clause,
-	p: &Proposition,
-	sub: &Substitution,
-) -> Option<(Clause, Substitution)> {
-	let mut cur = apply_substitution(sub, &Unifiable::Term(p.terms[0].clone()));
-	let mut count = 0;
-	while let Unifiable::Term(Term::FunctionApplication { name, args }) = &cur {
-		if name == "empty_list" && args.is_empty() {
-			break;
-		}
-		if name == "cons" && args.len() == 2 {
-			count += 1;
-			cur = Unifiable::Term(args[1].clone());
-		} else {
-			return None;
-		}
-	}
-	match apply_substitution(sub, &Unifiable::Term(p.terms[1].clone())) {
-		Unifiable::Term(Term::Identifier(var)) => {
-			let mut rem = goal.0.clone();
-			rem.remove(0);
-			let mut new_sub = sub.clone();
-			new_sub.insert(
-				Unifiable::Term(Term::Identifier(var.clone())),
-				Unifiable::Term(Term::FunctionApplication {
-					name: count.to_string(),
-					args: vec![],
-				}),
-			);
-			let mut clause = Clause(rem.clone());
-			apply_substitution_to_clause(&new_sub, &mut clause);
-			Some((clause, new_sub))
-		},
-		Unifiable::Term(Term::FunctionApplication { name, args }) if args.is_empty() => {
-			if name == count.to_string() {
-				let mut rem = goal.0.clone();
-				rem.remove(0);
-				return Some((Clause(rem), sub.clone()));
-			}
-			None
-		},
-		_ => None,
-	}
 }

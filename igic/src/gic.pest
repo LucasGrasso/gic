@@ -9,8 +9,8 @@ WHITESPACE  = _{ " " | "\t" | "\r" | "\n" }
 COMMENT     = _{ "//" ~ (!"\n" ~ ANY)* ~ ("\n" | EOI)
                | "/*" ~ (!"*/" ~ ANY)* ~ "*/" }
 
-var         = @{ alphanum_upper+ }
-cnt       = @{ alphanum_lower+ }
+var         = @{ upper ~ alphanum_upper* }
+cnt       = @{ lower ~ alphanum_lower* }
 
 term_args  = _{ term ~ ("," ~ term)* }
 
@@ -20,7 +20,8 @@ list_empty = { "[" ~ "]" }
 list_plain = { "[" ~ term ~ ("," ~ term)* ~ "]" }
 list_cons  = { "[" ~ term ~ "|" ~ list ~ "]" | "[" ~ term ~ "|" ~ var ~ "]"}
 list      = _{ list_empty | list_cons | list_plain }
-term        = _{ var | func | cnt | list }
+number = @{ "-"? ~ digit+ }
+term        = _{ var | func | number | cnt | list }
 
 identifier = @{ upper ~ (alphanum_lower)* }
 predicate   = { identifier ~ "(" ~ term_args ~ ")" }
@@ -30,7 +31,7 @@ exists_kw  = { "exists" | "∃" }
 quantifier = { forall_kw | exists_kw}
 
 impl_op    = { "impl" | "⇒" | "=>" }
-and_op     = { "and" | "∧" }
+and_op     = { "and" | "∧" | "^" }
 or_op      = { "or" | "∨" }
 not_op     = { "not" | "¬" }
 

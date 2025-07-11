@@ -26,6 +26,7 @@ pub fn apply_substitution(sub: &Substitution, t: &Unifiable) -> Unifiable {
 				.collect();
 			Unifiable::Term(Term::FunctionApplication { name: name.clone(), args: new_args })
 		},
+		Unifiable::Term(Term::Number(_)) => t.clone(),
 		Unifiable::Prop(p) => {
 			let new_terms = p
 				.terms
@@ -88,11 +89,10 @@ pub fn apply_substitution_to_sub(s1: &Substitution, s2: &mut Substitution) {
 	s2.extend(s1.clone());
 }
 
-/* pub fn print_substitution(sub: &Substitution) {
+pub fn print_substitution(sub: &Substitution) {
 	println!("{{ ");
 	for (k, v) in sub.iter() {
 		println!("{} -> {}", k, v);
 	}
 	println!("}}");
 }
- */

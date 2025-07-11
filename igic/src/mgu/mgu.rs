@@ -132,6 +132,26 @@ fn delete(pair: &UnifiablePair) -> Result<Substitution> {
 			sub.insert(Unifiable::Term(var), Unifiable::Term(term));
 			return Ok(sub);
 		},
+		(Unifiable::Term(Term::Number(n1)), Unifiable::Term(Term::Number(n2))) => {
+			if n1 == n2 {
+				return Ok(empty_substitution());
+			}
+			Err(MguError::Clash(format!("Cannot unify numbers: {} and {}", n1, n2)))
+		},
+		(Unifiable::Term(Term::Identifier(ref id)), Unifiable::Term(Term::Number(n))) => {
+			let var = Term::Identifier(id.clone());
+			let term = Term::Number(*n);
+			let mut sub = empty_substitution();
+			sub.insert(Unifiable::Term(var), Unifiable::Term(term));
+			return Ok(sub);
+		},
+		(Unifiable::Term(Term::Number(n)), Unifiable::Term(Term::Identifier(ref id))) => {
+			let var = Term::Identifier(id.clone());
+			let term = Term::Number(*n);
+			let mut sub = empty_substitution();
+			sub.insert(Unifiable::Term(var), Unifiable::Term(term));
+			return Ok(sub);
+		},
 		_ => Err(MguError::UnificationError(format!(
 			"Cannot delete terms: {:?} and {:?}",
 			pair.0, pair.1
@@ -143,6 +163,7 @@ fn occurs_check(var: &Term, term: &Term) -> bool {
 	match term {
 		Term::Identifier(_) => term == var,
 		Term::FunctionApplication { args, .. } => args.iter().any(|arg| occurs_check(var, arg)),
+		Term::Number(_) => false, // Numbers do not contain variables
 	}
 }
 

@@ -8,6 +8,7 @@ use rustyline::error::ReadlineError;
 use rustyline::history::FileHistory;
 use rustyline::Editor;
 
+mod builtins;
 mod clauses;
 mod mgu;
 mod parser;
@@ -48,6 +49,13 @@ fn main() {
 
 				match command {
 					"load" => load_cmd(&mut clausifier, &cwd, parts.next().unwrap_or("")),
+					"progam" => {
+						if clausifier.progam_loaded() {
+							println!("{}", clausifier.get_program());
+						} else {
+							eprintln!("No program loaded. Please load a .gic file first.");
+						}
+					},
 					"query" => {
 						use regex::Regex;
 						let rest_of_line = parts.collect::<Vec<&str>>().join(" ");
