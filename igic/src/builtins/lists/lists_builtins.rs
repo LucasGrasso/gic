@@ -1,11 +1,11 @@
 use crate::mgu::mgu::{Substitution, Unifiable};
 use crate::mgu::substitution::{
-	apply_substitution, apply_substitution_to_clause, apply_substitution_to_sub, empty_substitution,
+	apply_substitution, apply_substitution_to_clause, compose_substitutions, empty_substitution,
 };
 use crate::types::ast::{Proposition, Term};
 use crate::types::clause::{Clause, Literal};
 
-pub fn is_list(
+pub fn is_list_pred(
 	sub: &Substitution,
 	p: &Proposition,
 	goal: &Clause,
@@ -22,7 +22,7 @@ pub fn is_list(
 	None
 }
 
-pub fn list_length(
+pub fn length_pred(
 	goal: &Clause,
 	p: &Proposition,
 	sub: &Substitution,
@@ -44,16 +44,19 @@ pub fn list_length(
 		Unifiable::Term(Term::Identifier(var)) => {
 			let mut rem = goal.0.clone();
 			rem.remove(0);
-			let mut new_sub = sub.clone();
-			new_sub.insert(
+			let mut temp_sub = empty_substitution();
+			temp_sub.insert(
 				Unifiable::Term(Term::Identifier(var.clone())),
 				Unifiable::Term(Term::FunctionApplication {
 					name: count.to_string(),
 					args: vec![],
 				}),
 			);
+
+			let mut new_sub = sub.clone();
+			compose_substitutions(&temp_sub, &mut new_sub);
 			let mut clause = Clause(rem.clone());
-			apply_substitution_to_clause(&new_sub, &mut clause);
+			apply_substitution_to_clause(&temp_sub, &mut clause);
 			Some((clause, new_sub))
 		},
 		Unifiable::Term(Term::FunctionApplication { name, args }) if args.is_empty() => {
@@ -68,7 +71,7 @@ pub fn list_length(
 	}
 }
 
-pub fn list_elem(
+pub fn elem_pred(
 	goal: &Clause,
 	p: &Proposition,
 	sub: &Substitution,
@@ -88,11 +91,12 @@ pub fn list_elem(
 			temp_sub.insert(Unifiable::Term(elem.clone()), Unifiable::Term(head.clone()));
 
 			let mut new_sub = sub.clone();
-			apply_substitution_to_sub(&temp_sub, &mut new_sub);
+			compose_substitutions(&temp_sub, &mut new_sub);
 
 			let mut g1 = goal.0.clone();
 			g1.remove(0);
-			let clause1 = Clause(g1);
+			let mut clause1 = Clause(g1);
+			apply_substitution_to_clause(&temp_sub, &mut clause1);
 
 			// R2: Elem(tail, elem)
 			let mut g2 = goal.0.clone();

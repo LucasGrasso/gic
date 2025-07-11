@@ -1,5 +1,5 @@
 use super::substitution::{
-	apply_substitution_to_equation, apply_substitution_to_sub, empty_substitution,
+	apply_substitution_to_equation, compose_substitutions, empty_substitution,
 };
 use crate::types::ast::{Proposition, Term};
 use std::{collections::HashMap, fmt};
@@ -54,7 +54,7 @@ pub fn mgu(mut equations: UnificationEquation) -> Result<Substitution> {
 			},
 			Err(_e) => match delete(&pair) {
 				Ok(new_sub) => {
-					apply_substitution_to_sub(&new_sub, &mut sub);
+					compose_substitutions(&new_sub, &mut sub);
 					apply_substitution_to_equation(&sub, &mut equations);
 				},
 				Err(err) => {

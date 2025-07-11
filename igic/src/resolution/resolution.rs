@@ -4,13 +4,13 @@ use std::collections::VecDeque;
 use rustyline::history::FileHistory;
 use rustyline::Editor;
 
-use crate::builtins::integers::arithmetic::{arithmetic_builtin, compare_builtin};
-use crate::builtins::lists::lists_builtins::{is_list, list_elem, list_length};
+use crate::builtins::built_in_preds;
+
 use crate::mgu::mgu::{mgu, Result, Substitution, Unifiable, UnificationEquation};
 use crate::mgu::substitution::{
-	apply_substitution, apply_substitution_to_clause, apply_substitution_to_sub,
-	empty_substitution, print_substitution,
+	apply_substitution_to_clause, compose_substitutions, empty_substitution,
 };
+
 use crate::types::ast::Term;
 use crate::types::clause::{Clause, Literal, Program};
 
@@ -73,38 +73,29 @@ pub fn sld_resolution(program: &Program, goal: &Clause, rl: &mut Editor<(), File
 		if let Some(goal_literal) = current_goal.0.first() {
 			if let Some(branches) = built_in_preds(&current_goal, goal_literal, &current_sub) {
 				for (new_goal, new_sub) in branches {
-					println!("Resolving built-in predicate: {}", goal_literal);
-					println!("New goal: {}", new_goal);
 					stack.push_back((new_goal, new_sub));
 				}
 				continue;
 			}
-			println!("Resolving: {}", current_goal);
-			println!("Current substitution: ");
-			print_substitution(&current_sub);
 			for clause in &program.0 {
 				clause_counter += 1;
 				let unique_suffix = format!("_{}", clause_counter);
 				let std_clause = clause.suffix_vars(&unique_suffix);
 				if let Some(literal) = std_clause.0.first() {
 					if let Ok(Some(mgu_sub)) = unify_literals(goal_literal, literal) {
-						println!("Unifying with clause: {}", std_clause);
 						let mut new_sub = current_sub.clone();
-						apply_substitution_to_sub(&mgu_sub, &mut new_sub);
+						compose_substitutions(&mgu_sub, &mut new_sub);
 
-						let mut new_goal_lits = current_goal.0.clone();
-						new_goal_lits.remove(0);
-						new_goal_lits.extend(std_clause.iter().skip(1).cloned());
+						let mut new_goal_lits = std_clause.0[1..].to_vec();
+						new_goal_lits.extend(current_goal.iter().skip(1).cloned());
 
 						let mut new_goal = Clause(new_goal_lits);
 						apply_substitution_to_clause(&mgu_sub, &mut new_goal);
-						println!("New goal after unification: {}", new_goal);
 						stack.push_back((new_goal, new_sub));
 					}
 				}
 			}
 		}
-		println!("")
 	}
 	println!("{}", "false.".red());
 }
@@ -119,67 +110,4 @@ fn unify_literals(l1: &Literal, l2: &Literal) -> Result<Option<Substitution>> {
 		},
 		_ => Ok(None),
 	}
-}
-
-fn built_in_preds(
-	goal: &Clause,
-	lit: &Literal,
-	sub: &Substitution,
-) -> Option<Vec<(Clause, Substitution)>> {
-	if let Literal::Not(p) = lit {
-		match (p.name.as_str(), p.terms.len()) {
-			("Eq", 2) => {
-				let a = apply_substitution(sub, &Unifiable::Term(p.terms[0].clone()));
-				let b = apply_substitution(sub, &Unifiable::Term(p.terms[1].clone()));
-				if a == b {
-					let mut rem = goal.0.clone();
-					rem.remove(0);
-					return Some(vec![(Clause(rem), sub.clone())]);
-				}
-			},
-			("Diff", 2) => {
-				let a = apply_substitution(sub, &Unifiable::Term(p.terms[0].clone()));
-				let b = apply_substitution(sub, &Unifiable::Term(p.terms[1].clone()));
-				if a != b {
-					let mut rem = goal.0.clone();
-					rem.remove(0);
-					return Some(vec![(Clause(rem), sub.clone())]);
-				}
-			},
-			("Var", 1) => {
-				if let Unifiable::Term(Term::Identifier(_)) =
-					apply_substitution(sub, &Unifiable::Term(p.terms[0].clone()))
-				{
-					let mut rem = goal.0.clone();
-					rem.remove(0);
-					return Some(vec![(Clause(rem), sub.clone())]);
-				}
-			},
-			("Add", 3) => return arithmetic_builtin(goal, p, sub, |a, b| a + b),
-			("Sub", 3) => return arithmetic_builtin(goal, p, sub, |a, b| a - b),
-			("Mul", 3) => return arithmetic_builtin(goal, p, sub, |a, b| a * b),
-			("Div", 3) => {
-				return arithmetic_builtin(goal, p, sub, |a, b| {
-					if b == 0 {
-						panic!("Division by zero");
-					}
-					a / b
-				});
-			},
-			("Mod", 3) => return arithmetic_builtin(goal, p, sub, |a, b| a % b),
-			("Lt", 2) => return compare_builtin(goal, p, sub, |a, b| a < b),
-			("Lt_eq", 2) => return compare_builtin(goal, p, sub, |a, b| a <= b),
-			("Gt", 2) => return compare_builtin(goal, p, sub, |a, b| a > b),
-			("Gt_eq", 2) => return compare_builtin(goal, p, sub, |a, b| a >= b),
-			("Eq_int", 2) => return compare_builtin(goal, p, sub, |a, b| a == b),
-			("Diff_int", 2) => return compare_builtin(goal, p, sub, |a, b| a != b),
-			("Is_list", 1) => return is_list(sub, p, goal),
-			("Length", 2) => {
-				return list_length(goal, p, sub).map(|cl| vec![cl]);
-			},
-			("Elem", 2) => return list_elem(goal, p, sub),
-			_ => return None,
-		}
-	}
-	None
 }

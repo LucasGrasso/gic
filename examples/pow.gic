@@ -1,0 +1,7 @@
+Pow(N,0,1).
+(
+	Gt(P,0) and
+	Sub(P,1,P1) and
+	Pow(N,P1,R1) and
+	Mul(N,R1,R)
+) impl Pow(N,P,R).

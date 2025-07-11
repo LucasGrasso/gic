@@ -71,6 +71,11 @@ X and Y should be instanciated.
 Checks if integer `X` is different from integer `Y`.
 X and Y should be instanciated.
 
+### `Between(X, Y, Z)`
+
+Checks if integer `Z` is between integers `X` and `Y`, inclusive.
+X, Y should be instanciated, and Z should be a variable or an integer.
+
 ## Lists
 
 ### `Is_list(X)`

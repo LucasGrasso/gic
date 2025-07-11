@@ -78,7 +78,8 @@ pub fn apply_substitution_to_equation(sub: &Substitution, eq: &mut UnificationEq
 	}
 }
 
-pub fn apply_substitution_to_sub(s1: &Substitution, s2: &mut Substitution) {
+// Stores s1 composed with s2 in s2.
+pub fn compose_substitutions(s1: &Substitution, s2: &mut Substitution) {
 	let keys: Vec<_> = s2.keys().cloned().collect(); // clone keys to avoid borrow issue
 	for key in keys {
 		if let Some(val) = s2.get(&key) {
@@ -89,10 +90,10 @@ pub fn apply_substitution_to_sub(s1: &Substitution, s2: &mut Substitution) {
 	s2.extend(s1.clone());
 }
 
-pub fn print_substitution(sub: &Substitution) {
+/* pub fn print_substitution(sub: &Substitution) {
 	println!("{{ ");
 	for (k, v) in sub.iter() {
 		println!("{} -> {}", k, v);
 	}
 	println!("}}");
-}
+} */
