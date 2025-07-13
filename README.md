@@ -1,17 +1,10 @@
-```
-_____/\\\\\\\\\\\\__/\\\\\\\\\\\________/\\\\\\\\\_
-____/\\\//////////__\/////\\\///______/\\\////////__
-___/\\\_________________\/\\\_______/\\\/___________
-____\/\\\____/\\\\\\\_____\/\\\______/\\\_____________
-_____\/\\\___\/////\\\_____\/\\\_____\/\\\_____________
-______\/\\\_______\/\\\_____\/\\\_____\//\\\____________
-_______\/\\\_______\/\\\_____\/\\\______\///\\\__________
-________\//\\\\\\\\\\\\/___/\\\\\\\\\\\____\////\\\\\\\\\_
-__________\////////////____\///////////________\/////////__
+<p align="center">
+  <img src="https://github.com/LucasGrasso/gic/blob/master/assets/logo.png" />
+</p>
 
-```
-
-# GIC - The programming language for FOL
+<p align="center">
+The progamming language for First Order Lofic
+</p>
 
 This project was made for educational pourposes, to learn about the implementation of a programming language.
 
