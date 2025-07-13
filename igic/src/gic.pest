@@ -2,6 +2,7 @@ upper       = _{ 'A'..'Z' }
 lower       = _{ 'a'..'z' }
 digit 	  = _{ '0'..'9' }
 nothing   = _{ "" }
+alphanum     = _{ upper | lower | digit | "_" }
 alphanum_lower = _{ lower | digit | "_" }
 alphanum_upper    = _{ upper | digit | "_" }
 
@@ -23,7 +24,7 @@ list      = _{ list_empty | list_cons | list_plain }
 number = @{ "-"? ~ digit+ }
 term        = _{ var | func | number | cnt | list }
 
-identifier = @{ upper ~ (alphanum_lower)* }
+identifier = @{ upper ~ (alphanum)* }
 predicate   = { identifier ~ "(" ~ term_args ~ ")" }
 
 forall_kw  = { "forall" | "∀" }

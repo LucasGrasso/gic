@@ -1,0 +1,18 @@
+Elem(X, [X|XS]).
+Elem(X,XS) impl Elem(X, [Y|XS]).
+
+Append([], XS, XS).
+Append(XS, YS, ZS) impl Append([X|XS], YS, [X|ZS]).
+
+Reverse([], []).
+Reverse(T, RT) and Append(RT, [H], R) impl Reverse([H|T], R).
+
+Sum_list([], 0).
+(
+  Sum_list(T, N) and
+  Add(H, N, M)
+) impl Sum_list([H|T], M).
+
+Subsequence([],[]).
+Subsequence(XS,YS) impl Subsequence([X|XS], [X|YS]).
+Subsequence(XS, YS) impl Subsequence([X|XS], YS).

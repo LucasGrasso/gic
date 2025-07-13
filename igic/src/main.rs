@@ -8,8 +8,8 @@ use rustyline::error::ReadlineError;
 use rustyline::history::FileHistory;
 use rustyline::Editor;
 
-mod builtins;
 mod clauses;
+mod libraries;
 mod mgu;
 mod parser;
 mod resolution;
@@ -23,6 +23,9 @@ fn main() {
 		eprintln!("Error getting current directory, using default.");
 		env::current_dir().unwrap()
 	});
+
+	load_common_libraries(&mut clausifier, &cwd);
+
 	println!("Welcome to the IGIC REPL! Type 'exit' or 'quit' to leave.");
 	let history_path = "igic_history.txt";
 	if rl.load_history(history_path).is_err() {
@@ -127,11 +130,6 @@ fn query_cmd(clausifier: &mut Clausifier, input: &str, rl: &mut Editor<(), FileH
 	let mut formula = query.to_string();
 	formula.push(';');
 
-	if !clausifier.program_loaded() {
-		eprintln!("Error: No clauses loaded. Please load a .gic file first.");
-		return;
-	}
-
 	match parse_formula(&formula) {
 		Ok(expr) => match clausifier.clausify(types::ast::Expression::Not(Box::new(expr))) {
 			Ok(goal_program) => match goal_program.get_clause(0) {
@@ -149,5 +147,25 @@ fn query_cmd(clausifier: &mut Clausifier, input: &str, rl: &mut Editor<(), FileH
 		Err(e) => {
 			eprintln!("Parse error: {}", e);
 		},
+	}
+}
+
+fn load_common_libraries(clausifier: &mut Clausifier, cwd: &std::path::Path) -> () {
+	let libraries = ["src\\libraries\\lists\\lists.gic"];
+	for lib in libraries {
+		let file = cwd.join(lib);
+		match fs::read_to_string(file) {
+			Ok(content) => match parse_gic_file(&content) {
+				Ok(expressions) => {
+					for expr in expressions {
+						if let Err(e) = clausifier.add_to_program(expr) {
+							eprintln!("{}", format!("Error loading library {}: {}", lib, e).red());
+						}
+					}
+				},
+				Err(e) => eprintln!("{}", format!("Parse error in library {}: {}", lib, e).red()),
+			},
+			Err(e) => eprintln!("Error reading library {}: {}", lib, e),
+		}
 	}
 }

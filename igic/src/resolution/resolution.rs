@@ -4,7 +4,7 @@ use std::collections::VecDeque;
 use rustyline::history::FileHistory;
 use rustyline::Editor;
 
-use crate::builtins::built_in_preds;
+use crate::libraries::built_in_preds;
 
 use crate::mgu::mgu::{mgu, Result, Substitution, Unifiable, UnificationEquation};
 use crate::mgu::substitution::{
@@ -73,31 +73,81 @@ pub fn sld_resolution(program: &Program, goal: &Clause, rl: &mut Editor<(), File
 		if let Some(goal_literal) = current_goal.0.first() {
 			if let Some(branches) = built_in_preds(&current_goal, goal_literal, &current_sub) {
 				for (new_goal, new_sub) in branches {
-					stack.push_back((new_goal, new_sub));
+					if let Some(new_goal_literal) = new_goal.0.first() {
+						sld_backtrack(
+							&new_goal,
+							new_goal_literal,
+							&new_sub,
+							program,
+							&mut clause_counter,
+							&mut stack,
+						);
+					} else {
+						let mut bindings = Vec::new();
+						for var in &free_var_terms {
+							if let Some(value) = new_sub.get(var) {
+								bindings.push(format!("{} := {}", var, value));
+							}
+						}
+						if bindings.is_empty() {
+							println!("{}", "true.".green());
+						} else {
+							println!("{}", bindings.join(", "));
+						}
+						let readline = rl.readline("Continue? (Y/N) ");
+						match readline {
+							Ok(input) => {
+								if input.trim().eq_ignore_ascii_case("n") {
+									return;
+								} else {
+									continue;
+								}
+							},
+							Err(_) => return, // Exit if there's an error reading input
+						}
+					}
 				}
 				continue;
 			}
-			for clause in &program.0 {
-				clause_counter += 1;
-				let unique_suffix = format!("_{}", clause_counter);
-				let std_clause = clause.suffix_vars(&unique_suffix);
-				if let Some(literal) = std_clause.0.first() {
-					if let Ok(Some(mgu_sub)) = unify_literals(goal_literal, literal) {
-						let mut new_sub = current_sub.clone();
-						compose_substitutions(&mgu_sub, &mut new_sub);
-
-						let mut new_goal_lits = std_clause.0[1..].to_vec();
-						new_goal_lits.extend(current_goal.iter().skip(1).cloned());
-
-						let mut new_goal = Clause(new_goal_lits);
-						apply_substitution_to_clause(&mgu_sub, &mut new_goal);
-						stack.push_back((new_goal, new_sub));
-					}
-				}
-			}
+			sld_backtrack(
+				&current_goal,
+				goal_literal,
+				&current_sub,
+				program,
+				&mut clause_counter,
+				&mut stack,
+			);
 		}
 	}
 	println!("{}", "false.".red());
+}
+
+fn sld_backtrack(
+	current_goal: &Clause,
+	current_goal_literal: &Literal,
+	current_sub: &Substitution,
+	program: &Program,
+	clause_counter: &mut i32,
+	stack: &mut VecDeque<(Clause, Substitution)>,
+) -> () {
+	for clause in &program.0 {
+		*clause_counter += 1;
+		let unique_suffix = format!("_{}", clause_counter);
+		let std_clause = clause.suffix_vars(&unique_suffix);
+		if let Some(literal) = std_clause.0.first() {
+			if let Ok(Some(mgu_sub)) = unify_literals(current_goal_literal, literal) {
+				let mut new_sub = current_sub.clone();
+				compose_substitutions(&mgu_sub, &mut new_sub);
+
+				let mut new_goal_lits = std_clause.0[1..].to_vec();
+				new_goal_lits.extend(current_goal.iter().skip(1).cloned());
+
+				let mut new_goal = Clause(new_goal_lits);
+				apply_substitution_to_clause(&mgu_sub, &mut new_goal);
+				stack.push_back((new_goal, new_sub));
+			}
+		}
+	}
 }
 
 fn unify_literals(l1: &Literal, l2: &Literal) -> Result<Option<Substitution>> {

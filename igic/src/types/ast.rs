@@ -1,5 +1,7 @@
 use std::fmt;
 
+use crate::mgu::mgu::Unifiable;
+
 #[derive(Debug, PartialEq, Clone, Eq, Hash)]
 pub enum Term {
 	Identifier(String),
@@ -8,6 +10,26 @@ pub enum Term {
 }
 
 impl Term {
+	pub fn to_unifiable(&self) -> Option<Unifiable> {
+		match self {
+			Term::FunctionApplication { name, args } => {
+				let args_unifiable: Vec<Unifiable> =
+					args.iter().filter_map(|arg| arg.to_unifiable()).collect();
+				Some(Unifiable::Term(Term::FunctionApplication {
+					name: name.clone(),
+					args: args_unifiable
+						.into_iter()
+						.map(|u| match u {
+							Unifiable::Term(t) => t,
+							_ => unreachable!(),
+						})
+						.collect(),
+				}))
+			},
+			_ => None,
+		}
+	}
+
 	pub fn append_suffix_to_vars(&self, suffix: &str) -> Term {
 		let new_term = match self {
 			Term::Identifier(id) => Term::Identifier(format!("{}{}", id, suffix)),

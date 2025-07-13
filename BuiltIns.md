@@ -78,14 +78,10 @@ X, Y should be instanciated, and Z should be a variable or an integer.
 
 ## Lists
 
-### `Is_list(X)`
+### `Length(?L, ?N)`
 
-Checks if `X` is a list. If `X` is a list, it will return `true`, otherwise it will return `false`.
+True if Length represents the number of elements in List. This predicate is a true relation and can be used to find the length of a list or produce a list (holding variables) of length Length.
 
-### `Length(X, Y)`
+### `Is_list(?L)`
 
-Calculates the length of list `X` and unifies it with `Y`.
-
-### `Elem(List, E)`
-
-Checks if element `E` is in list `List`. If `E` is in `List`, it will return `true`, otherwise it will return `false`.
+Checks if `L` is a list. If `L` is a variable, returns false.
