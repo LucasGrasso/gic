@@ -218,8 +218,6 @@ fn parse_term(pair: Pair<Rule>) -> Result<Term> {
 #[cfg(test)]
 mod tests {
 	use super::*;
-	use crate::parser::{parse_term, TokenParser};
-	use pest::Parser;
 
 	fn parse_list(input: &str) -> Term {
 		// We cheat by parsing a dummy predicate around the list,
