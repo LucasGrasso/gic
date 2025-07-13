@@ -3,7 +3,7 @@
 </p>
 
 <p align="center">
-The progamming language for First Order Lofic
+The progamming language for First Order Logic
 </p>
 
 This project was made for educational pourposes, to learn about the implementation of a programming language.
@@ -39,19 +39,13 @@ cd igic
 cargo run
 Welcome to the IGIC REPL! Type 'exit' or 'quit' to leave.
 igic> load ..\examples\family.gic
-igic> query "Exists X. Exists Y. Grandpa(X,Y)"
-Goal Clause: {¬Grandpa(X, Y)}
-✔ Solution found!
+loaded.
+igic> query "exists X. exists Y. Grandpa(X,Y)"
 X := juan(), Y := maria()
-Continue? (Y/N) Y
-✘ No solution found.
 igic> query "∃ X. ∃ Y. Brother(X,Y)"
-Goal Clause: {¬Brother(X, Y)}
-✔ Solution found!
 X := luis(), Y := pepe()
-Continue? (Y/N) Y
-✔ Solution found!
+Continue? (Y/N) y
 X := pepe(), Y := luis()
-Continue? (Y/N) Y
-✘ No solution found.
+Continue? (Y/N) y
+false.
 ```
