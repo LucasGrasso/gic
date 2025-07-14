@@ -27,6 +27,7 @@ L-Formulas f ::= P(t1,... tn) | ⊥ | f ∧ f | f ∨ f | f ⇒ f | ¬ f | ∃ X
 
 You can use any of the symbols interchangeably.
 A .gic file consists of a set of L-Formulas separated by `.`.
+foralls may be left implicit.
 
 ### Usage
 
