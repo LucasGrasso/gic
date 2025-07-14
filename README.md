@@ -22,7 +22,6 @@ Syntax is FOL-like: If P is a predicate (Uppercase) and t1,...,tn terms such as 
 L-Formulas f ::= P(t1,... tn) | bottom | f and f | f or f | f impl f | not f | exists X. f | forall X. f
 // or equivalently:
 L-Formulas f ::= P(t1,... tn) | ⊥ | f ∧ f | f ∨ f | f ⇒ f | ¬ f | ∃ X. f | ∀ X. f
-
 ```
 
 You can use any of the symbols interchangeably.
@@ -35,7 +34,7 @@ To use GIC, you can run the **igic** interpreter and load a file containing your
 
 ### Example
 
-```bash
+```
 cd igic
 cargo run
 Welcome to the IGIC REPL! Type 'exit' or 'quit' to leave.
