@@ -22,7 +22,6 @@ impl fmt::Display for Literal {
 	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
 		match self {
 			Literal::Proposition(prop) => {
-				// Asumiendo que Proposition tiene name y terms
 				write!(
 					f,
 					"{}({})",

@@ -84,7 +84,6 @@ pub fn length_pred<'a>(
 		},
 		// Case: length is a concrete number, we generate that many empty cons cells
 		(Unifiable::Term(Term::Identifier(_)), Unifiable::Term(Term::Number(n))) => {
-			// generate a list of length n: [X1, X2, ..., Xn]
 			let list = generate_list_of_length(n as usize);
 			let mut temp_sub = empty_substitution();
 			temp_sub.insert(Unifiable::Term(prop.terms[0].clone()), Unifiable::Term(list));
@@ -101,7 +100,6 @@ pub fn length_pred<'a>(
 			Some(Box::new((0..).map(move |n| {
 				let list = generate_list_of_length(n as usize);
 
-				// Prepare temporary substitution
 				let mut temp_sub = empty_substitution();
 				temp_sub.insert(Unifiable::Term(prop.terms[0].clone()), Unifiable::Term(list));
 				temp_sub.insert(
@@ -109,7 +107,6 @@ pub fn length_pred<'a>(
 					Unifiable::Term(Term::Number(n)),
 				);
 
-				// Apply temp_sub to goal and compose with current substitution
 				let mut new_goal = Clause(goal.0[1..].to_vec());
 				let mut new_sub = sub.clone();
 
@@ -125,18 +122,13 @@ pub fn length_pred<'a>(
 
 fn get_length_of_list(term: &Unifiable) -> Option<usize> {
 	match term {
-		Unifiable::Term(Term::FunctionApplication { name, args })
-			if name == "empty_list" && args.is_empty() =>
-		{
-			Some(0)
-		},
-		Unifiable::Term(Term::FunctionApplication { name, args })
-			if name == "cons" && args.len() == 2 =>
-		{
-			let tail = args.into_iter().nth(1)?; // get the tail term
-			let unifiable_tail = tail.to_unifiable()?;
-			if let Some(length) = get_length_of_list(&unifiable_tail) {
-				Some(length + 1)
+		Unifiable::Term(Term::FunctionApplication { name, args }) => {
+			if name == "empty_list" && args.is_empty() {
+				Some(0)
+			} else if name == "cons" && args.len() == 2 {
+				let tail = &args[1];
+				let unifiable_tail = Unifiable::Term(tail.clone());
+				get_length_of_list(&unifiable_tail).map(|len| len + 1)
 			} else {
 				None
 			}

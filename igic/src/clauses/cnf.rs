@@ -1,7 +1,7 @@
 use super::skolem::SkolemContext;
 use crate::types::ast::Expression;
 use crate::types::clause::{Clause, Literal, Program};
-use crate::types::{GicError, Result}; // adjust path as needed
+use crate::types::{GicError, Result};
 
 pub struct Clausifier {
 	clause_id: usize,
@@ -38,7 +38,7 @@ impl Clausifier {
 		let quantifier_free = remove_universal_quantifiers(no_existentials);
 		let cnf = flatten_cnf(quantifier_free)?;
 
-		Ok(cnf) // Return the first clause from the CNF
+		Ok(cnf)
 	}
 
 	pub fn get_program(&self) -> &Program {

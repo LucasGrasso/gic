@@ -50,17 +50,14 @@ impl fmt::Display for Term {
 			Term::Identifier(id) => write!(f, "{}", id),
 
 			Term::FunctionApplication { name, args } => {
-				// Detención de empty_list y cons
 				if name == "empty_list" && args.is_empty() {
 					return write!(f, "[]");
 				}
 
 				if name == "cons" && args.len() == 2 {
-					// Intentamos reconstruir [X|XS] sintácticamente
 					let head = &args[0];
 					let tail = &args[1];
 
-					// Si el tail también es una lista, vamos a aplanarla
 					let mut elements = vec![format!("{}", head)];
 					let mut current_tail = tail;
 
@@ -69,17 +66,13 @@ impl fmt::Display for Term {
 							elements.push(format!("{}", args[0]));
 							current_tail = &args[1];
 						} else if name == "empty_list" && args.is_empty() {
-							// lista completa
 							return write!(f, "[{}]", elements.join(", "));
 						} else {
-							// forma [X|Tail]
 							return write!(f, "[{}|{}]", elements.join(", "), current_tail);
 						}
 					}
-					// Llegamos a algo que no es lista
 					write!(f, "[{}|{}]", elements.join(", "), current_tail)
 				} else {
-					// Default: name(arg1, arg2, ...)
 					let args_str: Vec<String> = args.iter().map(|arg| format!("{}", arg)).collect();
 					write!(f, "{}({})", name, args_str.join(", "))
 				}
@@ -98,9 +91,9 @@ pub struct Proposition {
 impl fmt::Display for Proposition {
 	fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
 		let terms_str: Vec<String> = self
-			.terms
+			.terms //
 			.iter()
-			.map(|term| format!("{}", term)) // Recursively call fmt::Display for each term
+			.map(|term| format!("{}", term))
 			.collect();
 		write!(f, "{}({})", self.name, terms_str.join(", "))
 	}

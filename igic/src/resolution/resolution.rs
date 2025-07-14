@@ -44,30 +44,13 @@ pub fn sld_resolution(program: &Program, goal: &Clause, rl: &mut Editor<(), File
 
 	while let Some((current_goal, current_sub)) = stack.pop_back() {
 		if current_goal.is_empty() {
-			let mut bindings = Vec::new();
-			for var in &free_var_terms {
-				if let Some(value) = current_sub.get(var) {
-					bindings.push(format!("{} := {}", var, value));
-				}
-			}
-			if bindings.is_empty() {
-				println!("{}", "true.".green());
-			} else {
-				println!("{}", bindings.join(", "));
-			}
+			print_solutions(&free_var_terms, &current_sub);
 			if stack.is_empty() {
 				return;
 			}
-			let readline = rl.readline("Continue? (Y/N) ");
-			match readline {
-				Ok(input) => {
-					if input.trim().eq_ignore_ascii_case("n") {
-						return;
-					} else {
-						continue;
-					}
-				},
-				Err(_) => return, // Exit if there's an error reading input
+			match continue_prompt(rl) {
+				true => continue,
+				false => return,
 			}
 		}
 		if let Some(goal_literal) = current_goal.0.first() {
@@ -83,27 +66,10 @@ pub fn sld_resolution(program: &Program, goal: &Clause, rl: &mut Editor<(), File
 							&mut stack,
 						);
 					} else {
-						let mut bindings = Vec::new();
-						for var in &free_var_terms {
-							if let Some(value) = new_sub.get(var) {
-								bindings.push(format!("{} := {}", var, value));
-							}
-						}
-						if bindings.is_empty() {
-							println!("{}", "true.".green());
-						} else {
-							println!("{}", bindings.join(", "));
-						}
-						let readline = rl.readline("Continue? (Y/N) ");
-						match readline {
-							Ok(input) => {
-								if input.trim().eq_ignore_ascii_case("n") {
-									return;
-								} else {
-									continue;
-								}
-							},
-							Err(_) => return, // Exit if there's an error reading input
+						print_solutions(&free_var_terms, &new_sub);
+						match continue_prompt(rl) {
+							true => continue,
+							false => return,
 						}
 					}
 				}
@@ -159,5 +125,27 @@ fn unify_literals(l1: &Literal, l2: &Literal) -> Result<Option<Substitution>> {
 			mgu(eq).map(Some)
 		},
 		_ => Ok(None),
+	}
+}
+
+fn print_solutions(free_vars: &[Unifiable], sub: &Substitution) {
+	let mut bindings = Vec::new();
+	for var in free_vars {
+		if let Some(value) = sub.get(var) {
+			bindings.push(format!("{} := {}", var, value));
+		}
+	}
+	if bindings.is_empty() {
+		println!("{}", "true.".green());
+	} else {
+		println!("{}", bindings.join(", "));
+	}
+}
+
+fn continue_prompt(rl: &mut Editor<(), FileHistory>) -> bool {
+	let readline = rl.readline("Continue? (Y/N) ");
+	match readline {
+		Ok(input) => input.trim().eq_ignore_ascii_case("y"),
+		Err(_) => false, // Exit if there's an error reading input
 	}
 }

@@ -88,7 +88,7 @@ fn substitute_var(expr: Expression, var: &str, replacement: &Term) -> Expression
 			Box::new(substitute_var(*a, var, replacement)),
 			Box::new(substitute_var(*b, var, replacement)),
 		),
-		Expression::ForAll(v, e) if v == var => Expression::ForAll(v, e), // shadowed
+		Expression::ForAll(v, e) if v == var => Expression::ForAll(v, e),
 		Expression::Exists(v, e) if v == var => Expression::Exists(v, e),
 		Expression::ForAll(v, e) => {
 			Expression::ForAll(v.clone(), Box::new(substitute_var(*e, var, replacement)))
