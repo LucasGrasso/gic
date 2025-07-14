@@ -96,7 +96,6 @@ pub fn length_pred<'a>(
 			Some(Box::new(std::iter::once((new_goal, new_sub))))
 		},
 		(Unifiable::Term(Term::Identifier(_)), Unifiable::Term(Term::Identifier(_))) => {
-			println!("Generating lists of increasing length");
 			Some(Box::new((0..).map(move |n| {
 				let list = generate_list_of_length(n as usize);
 

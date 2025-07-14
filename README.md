@@ -48,4 +48,6 @@ Continue? (Y/N) y
 X := pepe(), Y := luis()
 Continue? (Y/N) y
 false.
+igic> query "Length(XS,6) and Reverse(XS,XS)"
+XS := [H_78, H_66, H_54, H_54, H_66, H_78]
 ```
