@@ -1,0 +1,38 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+
+      - name: Install Rust stable
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          override: true
+
+      - name: Build release binary
+        run: |
+          cd igic
+          cargo build --release
+
+      - name: Copy binary and .gic files
+        run: |
+          mkdir -p package
+          cp igic/target/release/igic package/
+          cp igic/src/libraries/**/*.gic package/ || true
+
+      - name: Create zip archive
+        run: zip -r igic-release.zip package
+
+      - name: Upload release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: igic-release.zip

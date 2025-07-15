@@ -24,7 +24,7 @@ fn main() {
 		env::current_dir().unwrap()
 	});
 
-	let progam_index = load_common_libraries(&mut clausifier, &cwd);
+	let progam_index = load_common_libraries(&mut clausifier);
 
 	println!("Welcome to the IGIC REPL! Type 'exit' or 'quit' to leave.");
 	let history_path = "igic_history.txt";
@@ -99,24 +99,23 @@ fn main() {
 	rl.save_history(history_path).unwrap();
 }
 
-fn load_common_libraries(clausifier: &mut Clausifier, cwd: &std::path::Path) -> usize {
-	let libraries = ["src\\libraries\\lists\\lists.gic"];
-	for lib in libraries {
-		let file = cwd.join(lib);
-		match fs::read_to_string(file) {
-			Ok(content) => match parse_gic_file(&content) {
-				Ok(expressions) => {
-					for expr in expressions {
-						if let Err(e) = clausifier.add_to_program(expr) {
-							eprintln!("{}", format!("Error loading library {}: {}", lib, e).red());
-						}
+fn load_common_libraries(clausifier: &mut Clausifier) -> usize {
+	let libraries: &[(&str, &str)] =
+		&[("lists.gic", include_str!("../src/libraries/lists/lists.gic"))];
+
+	for (name, content) in libraries {
+		match parse_gic_file(content) {
+			Ok(expressions) => {
+				for expr in expressions {
+					if let Err(e) = clausifier.add_to_program(expr) {
+						eprintln!("{}", format!("Error loading library {}: {}", name, e).red());
 					}
-				},
-				Err(e) => eprintln!("{}", format!("Parse error in library {}: {}", lib, e).red()),
+				}
 			},
-			Err(e) => eprintln!("Error reading library {}: {}", lib, e),
+			Err(e) => eprintln!("{}", format!("Parse error in library {}: {}", name, e).red()),
 		}
 	}
+
 	clausifier.get_progam_length()
 }
 
