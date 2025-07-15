@@ -1,8 +1,8 @@
-// Elem(+XS, ?X)
+// Elem(?XS, ?X)
 Elem(X, [X|XS]).
 Elem(X,XS) impl Elem(X, [Y|XS]).
 
-// Append(+XS, +YS, ?ZS)
+// Append(?XS, ?YS, ?ZS)
 Append([], XS, XS).
 Append(XS, YS, ZS) impl Append([X|XS], YS, [X|ZS]).
 
@@ -18,7 +18,10 @@ Sum_list([], 0).
   Add(H, N, M)
 ) impl Sum_list([H|T], M).
 
-// Subsequence(+XS, ?YS)
-Subsequence([],[]).
-Subsequence(XS,YS) impl Subsequence([X|XS], [X|YS]).
-Subsequence(XS, YS) impl Subsequence([X|XS], YS).
+// Nth(+N, ?XS, ?X)
+Nth(0, [X|Y], X).
+(
+  Gt(N, 0) and
+  Nth(N, XS, X) and
+  Sub(N, 1, M)
+) impl Nth(M, [Y|XS], X).

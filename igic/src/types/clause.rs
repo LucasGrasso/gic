@@ -185,6 +185,18 @@ impl Program {
 	pub fn is_empty(&self) -> bool {
 		self.0.is_empty()
 	}
+
+	pub fn get_progam_length(&self) -> usize {
+		self.0.len()
+	}
+
+	pub fn str_from(&self, start: usize) -> String {
+		let mut output = String::new();
+		for (i, clause) in self.0.iter().enumerate().skip(start) {
+			output.push_str(&format!("{}: {}\n", (i + 1) - start, clause));
+		}
+		output
+	}
 }
 
 impl IntoIterator for Program {

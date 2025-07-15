@@ -24,7 +24,7 @@ fn main() {
 		env::current_dir().unwrap()
 	});
 
-	load_common_libraries(&mut clausifier, &cwd);
+	let progam_index = load_common_libraries(&mut clausifier, &cwd);
 
 	println!("Welcome to the IGIC REPL! Type 'exit' or 'quit' to leave.");
 	let history_path = "igic_history.txt";
@@ -54,7 +54,7 @@ fn main() {
 					"load" => load_cmd(&mut clausifier, &cwd, parts.next().unwrap_or("")),
 					"program" => {
 						if clausifier.program_loaded() {
-							println!("{}", clausifier.get_program());
+							println!("{}", clausifier.to_str_from(progam_index));
 						} else {
 							eprintln!("No program loaded. Please load a .gic file first.");
 						}
@@ -150,7 +150,7 @@ fn query_cmd(clausifier: &mut Clausifier, input: &str, rl: &mut Editor<(), FileH
 	}
 }
 
-fn load_common_libraries(clausifier: &mut Clausifier, cwd: &std::path::Path) -> () {
+fn load_common_libraries(clausifier: &mut Clausifier, cwd: &std::path::Path) -> usize {
 	let libraries = ["src\\libraries\\lists\\lists.gic"];
 	for lib in libraries {
 		let file = cwd.join(lib);
@@ -168,4 +168,5 @@ fn load_common_libraries(clausifier: &mut Clausifier, cwd: &std::path::Path) -> 
 			Err(e) => eprintln!("Error reading library {}: {}", lib, e),
 		}
 	}
+	clausifier.get_progam_length()
 }

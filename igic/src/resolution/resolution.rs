@@ -43,16 +43,6 @@ pub fn sld_resolution(program: &Program, goal: &Clause, rl: &mut Editor<(), File
 	stack.push_back((goal.clone(), empty_substitution()));
 
 	while let Some((current_goal, current_sub)) = stack.pop_back() {
-		if current_goal.is_empty() {
-			print_solutions(&free_var_terms, &current_sub);
-			if stack.is_empty() {
-				return;
-			}
-			match continue_prompt(rl) {
-				true => continue,
-				false => return,
-			}
-		}
 		if let Some(goal_literal) = current_goal.0.first() {
 			if let Some(branches) = built_in_preds(&current_goal, goal_literal, &current_sub) {
 				for (new_goal, new_sub) in branches {
@@ -64,6 +54,8 @@ pub fn sld_resolution(program: &Program, goal: &Clause, rl: &mut Editor<(), File
 							program,
 							&mut clause_counter,
 							&mut stack,
+							&free_var_terms,
+							rl,
 						);
 					} else {
 						print_solutions(&free_var_terms, &new_sub);
@@ -82,6 +74,8 @@ pub fn sld_resolution(program: &Program, goal: &Clause, rl: &mut Editor<(), File
 				program,
 				&mut clause_counter,
 				&mut stack,
+				&free_var_terms,
+				rl,
 			);
 		}
 	}
@@ -95,6 +89,8 @@ fn sld_backtrack(
 	program: &Program,
 	clause_counter: &mut i32,
 	stack: &mut VecDeque<(Clause, Substitution)>,
+	free_vars_terms: &[Unifiable],
+	rl: &mut Editor<(), FileHistory>,
 ) -> () {
 	for clause in &program.0 {
 		*clause_counter += 1;
@@ -109,8 +105,16 @@ fn sld_backtrack(
 				new_goal_lits.extend(current_goal.iter().skip(1).cloned());
 
 				let mut new_goal = Clause(new_goal_lits);
-				apply_substitution_to_clause(&mgu_sub, &mut new_goal);
-				stack.push_back((new_goal, new_sub));
+				if new_goal.is_empty() {
+					print_solutions(&free_vars_terms, &new_sub);
+					match continue_prompt(rl) {
+						true => continue,
+						false => return,
+					}
+				} else {
+					apply_substitution_to_clause(&mgu_sub, &mut new_goal);
+					stack.push_back((new_goal, new_sub));
+				}
 			}
 		}
 	}

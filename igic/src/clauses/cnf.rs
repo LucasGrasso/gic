@@ -44,6 +44,14 @@ impl Clausifier {
 	pub fn get_program(&self) -> &Program {
 		&self.program
 	}
+
+	pub fn to_str_from(&self, start: usize) -> String {
+		self.program.str_from(start)
+	}
+
+	pub fn get_progam_length(&self) -> usize {
+		self.program.get_progam_length()
+	}
 }
 
 fn expr_to_literal(expr: Expression) -> Result<Literal> {
