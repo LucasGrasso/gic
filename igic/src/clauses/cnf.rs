@@ -22,10 +22,6 @@ impl Clausifier {
 		Ok(())
 	}
 
-	pub fn program_loaded(&self) -> bool {
-		!self.program.0.is_empty()
-	}
-
 	pub fn clausify(&mut self, expr: Expression) -> Result<Program> {
 		self.ctx.set_clause_id(self.clause_id);
 		self.clause_id += 1;

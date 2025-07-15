@@ -53,9 +53,10 @@ fn main() {
 				match command {
 					"load" => load_cmd(&mut clausifier, &cwd, parts.next().unwrap_or("")),
 					"program" => {
-						if clausifier.program_loaded() {
+						if clausifier.get_progam_length() - progam_index >= 1 {
 							println!("{}", clausifier.to_str_from(progam_index));
 						} else {
+							eprint!("{}", "Error: ".red());
 							eprintln!("No program loaded. Please load a .gic file first.");
 						}
 					},
@@ -68,13 +69,19 @@ fn main() {
 							let query_input = caps.get(1).unwrap().as_str();
 							query_cmd(&mut clausifier, query_input, &mut rl);
 						} else {
-							eprintln!("Error: Query must be wrapped in double quotes, like: query \"<formula>\"");
+							eprint!("{}", "Error: ".red());
+							eprintln!(
+								"Query must be wrapped in double quotes, like: query \"<formula>\""
+							);
 						}
 					},
-					_ => println!(
-						"Unknown command: '{}'. Use 'load <file>', 'query \"<expr>\"', 'exit', or 'quit'.",
+					_ => {
+						eprint!("{}", "Error: ".red());
+						eprintln!(
+						"Unknown command: '{}'. Use 'load <file>', 'query \"<expr>\"', program, 'exit', or 'quit'.",
 						command
-					),
+					)
+					},
 				}
 			},
 			Err(ReadlineError::Interrupted) => {
@@ -90,6 +97,27 @@ fn main() {
 		}
 	}
 	rl.save_history(history_path).unwrap();
+}
+
+fn load_common_libraries(clausifier: &mut Clausifier, cwd: &std::path::Path) -> usize {
+	let libraries = ["src\\libraries\\lists\\lists.gic"];
+	for lib in libraries {
+		let file = cwd.join(lib);
+		match fs::read_to_string(file) {
+			Ok(content) => match parse_gic_file(&content) {
+				Ok(expressions) => {
+					for expr in expressions {
+						if let Err(e) = clausifier.add_to_program(expr) {
+							eprintln!("{}", format!("Error loading library {}: {}", lib, e).red());
+						}
+					}
+				},
+				Err(e) => eprintln!("{}", format!("Parse error in library {}: {}", lib, e).red()),
+			},
+			Err(e) => eprintln!("Error reading library {}: {}", lib, e),
+		}
+	}
+	clausifier.get_progam_length()
 }
 
 fn load_cmd(clausifier: &mut Clausifier, cwd: &std::path::Path, input: &str) {
@@ -148,25 +176,4 @@ fn query_cmd(clausifier: &mut Clausifier, input: &str, rl: &mut Editor<(), FileH
 			eprintln!("Parse error: {}", e);
 		},
 	}
-}
-
-fn load_common_libraries(clausifier: &mut Clausifier, cwd: &std::path::Path) -> usize {
-	let libraries = ["src\\libraries\\lists\\lists.gic"];
-	for lib in libraries {
-		let file = cwd.join(lib);
-		match fs::read_to_string(file) {
-			Ok(content) => match parse_gic_file(&content) {
-				Ok(expressions) => {
-					for expr in expressions {
-						if let Err(e) = clausifier.add_to_program(expr) {
-							eprintln!("{}", format!("Error loading library {}: {}", lib, e).red());
-						}
-					}
-				},
-				Err(e) => eprintln!("{}", format!("Parse error in library {}: {}", lib, e).red()),
-			},
-			Err(e) => eprintln!("Error reading library {}: {}", lib, e),
-		}
-	}
-	clausifier.get_progam_length()
 }
