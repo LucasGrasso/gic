@@ -51,3 +51,9 @@ false.
 igic> query "Length(XS,6) and Reverse(XS,XS)"
 XS := [H_78, H_66, H_54, H_54, H_66, H_78]
 ```
+
+## License
+
+This project is licensed under the terms of the [GNU General Public License v3.0](LICENSE).
+
+© 2025 Lucas Grasso
