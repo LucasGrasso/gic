@@ -62,7 +62,7 @@ jobs:
         shell: pwsh
         run: |
           mkdir igic-win
-          Copy-Item igic/target/x86_64-pc-windows-msvc/release/igic.exe igic-win/
+          Copy-Item igic/target/release/igic.exe igic-win/
           Get-ChildItem -Recurse -Filter *.gic -Path igic/src/libraries | Copy-Item -Destination igic-win/
 
       - name: Create zip archive
