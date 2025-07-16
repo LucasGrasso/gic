@@ -33,8 +33,10 @@ jobs:
         run: zip -r igic-release.zip package
 
       - name: Upload release
-        uses: softprops/action-gh-release@v1
-        with:
-          files: igic-release.zip
+        id: create_release
+        uses: comnoco/create-release@v2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          draft: false
+          prerelease: false
