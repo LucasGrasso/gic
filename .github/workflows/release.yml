@@ -7,80 +7,64 @@ on:
 
 jobs:
   build-linux:
-    name: Build Linux
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - uses: actions-rs/toolchain@v1
+     runs-on: ubuntu-latest
+     steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+
+      - name: Install Rust stable
+        uses: actions-rs/toolchain@v1
         with:
           toolchain: stable
           override: true
-      - run: |
+
+      - name: Build release binary
+        run: |
           cd igic
-          cargo build --release --target x86_64-unknown-linux-gnu
-      - run: |
-          mkdir -p pkg/linux
-          cp igic/target/x86_64-unknown-linux-gnu/release/igic pkg/linux/
-          mkdir -p pkg/linux/libraries
-          cp igic/src/libraries/*.gic pkg/linux/libraries/
-      - run: |
-          cd pkg/linux
-          zip -r ../../igic-linux.zip .
-      - uses: softprops/action-gh-release@v2
+          cargo build --release
+
+      - name: Copy binary and .gic files
+        run: |
+          mkdir -p igic-linux
+          cp igic/target/release/igic igic-linux/
+          cp igic/src/libraries/**/*.gic igic-linux/ || true
+
+      - name: Create zip archive
+        run: zip -r igic-linux.zip igic-linux
+
+      - name: Release
+        uses: softprops/action-gh-release@v2
         with:
           files: igic-linux.zip
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   build-windows:
     name: Build Windows
     runs-on: windows-latest
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions-rs/toolchain@v1
-        with:
-          toolchain: stable
-          override: true
-      - run: |
-          cd igic
-          rustup target add x86_64-pc-windows-gnu
-          cargo build --release --target x86_64-pc-windows-gnu
-      - run: |
-          mkdir pkg\windows
-          copy igic\target\x86_64-pc-windows-gnu\release\igic.exe pkg\windows\igic.exe
-          mkdir pkg\windows\libraries
-          copy igic\src\libraries\*.gic pkg\windows\libraries\
-      - run: |
-          cd pkg\windows
-          Compress-Archive -Path . -DestinationPath ..\..\igic-windows.zip
-      - uses: softprops/action-gh-release@v2
-        with:
-          files: igic-windows.zip
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Checkout repo
+        uses: actions/checkout@v3
 
-  build-macos:
-    name: Build macOS
-    runs-on: macos-latest
-    steps:
-      - uses: actions/checkout@v3
-      - uses: actions-rs/toolchain@v1
+      - name: Install Rust stable
+        uses: actions-rs/toolchain@v1
         with:
           toolchain: stable
           override: true
-      - run: |
+
+      - name: Build release binary
+        run: |
           cd igic
-          cargo build --release --target x86_64-apple-darwin
-      - run: |
-          mkdir -p pkg/macos
-          cp igic/target/x86_64-apple-darwin/release/igic pkg/macos/
-          mkdir -p pkg/macos/libraries
-          cp igic/src/libraries/*.gic pkg/macos/libraries/
-      - run: |
-          cd pkg/macos
-          zip -r ../../igic-macos.zip .
-      - uses: softprops/action-gh-release@v2
+          cargo build --release
+
+      - name: Copy binary and .gic files
+        run: |
+          mkdir -p igic-win
+          cp igic/target/release/igic igic-win/
+          cp igic/src/libraries/**/*.gic igic-win/ || true
+
+      - name: Create zip archive
+        run: zip -r igic-win.zip igic-win
+
+      - name: Release
+        uses: softprops/action-gh-release@v2
         with:
-          files: igic-macos.zip
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          files: igic-linux.zip
