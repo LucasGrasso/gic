@@ -7,17 +7,20 @@ on:
 
 jobs:
   build-linux:
+    name: Build Linux
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repo
         uses: actions/checkout@v3
 
-      - name: Install Rust and musl target
+      - name: Install Rust stable
         uses: actions-rs/toolchain@v1
         with:
           toolchain: stable
           override: true
-          targets: x86_64-unknown-linux-musl
+
+      - name: Install musl target
+        run: rustup target add x86_64-unknown-linux-musl
 
       - name: Build static release binary with musl
         run: |
@@ -28,7 +31,7 @@ jobs:
         run: |
           mkdir -p igic-linux
           cp igic/target/x86_64-unknown-linux-musl/release/igic igic-linux/
-          cp -r igic/src/libraries/*.gic igic-linux/ || true
+          find igic/src/libraries -name '*.gic' -exec cp {} igic-linux/ \;
 
       - name: Create zip archive
         run: zip -r igic-linux.zip igic-linux
@@ -39,13 +42,12 @@ jobs:
           files: igic-linux.zip
 
   build-windows:
-    name: Build Windows
     runs-on: windows-latest
     steps:
       - name: Checkout repo
         uses: actions/checkout@v3
 
-      - name: Install Rust stable
+      - name: Install Rust
         uses: actions-rs/toolchain@v1
         with:
           toolchain: stable
@@ -58,14 +60,15 @@ jobs:
 
       - name: Copy binary and .gic files
         run: |
-          mkdir -p igic-win
-          cp igic/target/release/igic.exe igic-win/
-          cp igic/src/libraries/**/*.gic igic-win/ || true
+          mkdir igic-win
+          copy igic\target\release\igic.exe igic-win\
+          copy igic\src\libraries\*.gic igic-win\
 
       - name: Create zip archive
-        run: zip -r igic-win.zip igic-win
+        run: Compress-Archive -Path igic-win -DestinationPath igic-win.zip
+        shell: pwsh
 
       - name: Release
         uses: softprops/action-gh-release@v2
         with:
-          files: igic-linux.zip
+          files: igic-win.zip
