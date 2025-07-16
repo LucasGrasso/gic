@@ -92,7 +92,7 @@ jobs:
         run: |
           mkdir -p igic-macos/libraries
           cp igic/target/release/igic igic-macos/
-          cp igic/src/libraries/*.gic igic-macos/libraries/
+          find igic/src/libraries -name '*.gic' -exec cp {} igic-macos/ \;
           zip -r igic-macos.zip igic-macos
 
       - uses: softprops/action-gh-release@v2
