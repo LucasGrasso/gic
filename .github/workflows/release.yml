@@ -1,4 +1,4 @@
-name: Release
+name: Cross-Platform Release
 
 on:
   push:
@@ -8,31 +8,49 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        target:
+          - x86_64-unknown-linux-gnu
+          - x86_64-pc-windows-gnu
+          - x86_64-apple-darwin
     steps:
-      - name: Checkout repo
+      - name: Checkout repository
         uses: actions/checkout@v3
 
-      - name: Install Rust stable
+      - name: Install Rust toolchain
         uses: actions-rs/toolchain@v1
         with:
           toolchain: stable
+          components: rust-src
           override: true
+
+      - name: Add target
+        run: rustup target add ${{ matrix.target }}
 
       - name: Build release binary
         run: |
           cd igic
-          cargo build --release
+          cargo build --release --target ${{ matrix.target }}
 
-      - name: Copy binary and .gic files
+      - name: Prepare package
         run: |
-          mkdir -p package
-          cp igic/target/release/igic package/
-          cp igic/src/libraries/**/*.gic package/ || true
+          mkdir -p pkg/${{ matrix.target }}
+          BIN=igic
+          [ "${{ matrix.target }}" = "x86_64-pc-windows-gnu" ] && BIN=igic.exe
+          cp igic/target/${{ matrix.target }}/release/${BIN} pkg/${{ matrix.target }}/
+          mkdir -p pkg/${{ matrix.target }}/libraries
+          cp igic/src/libraries/*.gic pkg/${{ matrix.target }}/libraries/
 
-      - name: Create zip archive
-        run: zip -r igic-release.zip package
+      - name: Zip package
+        run: |
+          cd pkg/${{ matrix.target }}
+          zip -r ../../igic-${{ matrix.target }}.zip .
 
-      - name: Release
+      - name: Upload release assets
         uses: softprops/action-gh-release@v2
         with:
-          files: igic-release.zip
+          files: |
+            igic-${{ matrix.target }}.zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }
