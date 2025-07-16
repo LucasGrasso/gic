@@ -7,27 +7,28 @@ on:
 
 jobs:
   build-linux:
-     runs-on: ubuntu-latest
-     steps:
+    runs-on: ubuntu-latest
+    steps:
       - name: Checkout repo
         uses: actions/checkout@v3
 
-      - name: Install Rust stable
+      - name: Install Rust and musl target
         uses: actions-rs/toolchain@v1
         with:
           toolchain: stable
           override: true
+          targets: x86_64-unknown-linux-musl
 
-      - name: Build release binary
+      - name: Build static release binary with musl
         run: |
           cd igic
-          cargo build --release
+          cargo build --release --target x86_64-unknown-linux-musl
 
       - name: Copy binary and .gic files
         run: |
           mkdir -p igic-linux
-          cp igic/target/release/igic igic-linux/
-          cp igic/src/libraries/**/*.gic igic-linux/ || true
+          cp igic/target/x86_64-unknown-linux-musl/release/igic igic-linux/
+          cp -r igic/src/libraries/*.gic igic-linux/ || true
 
       - name: Create zip archive
         run: zip -r igic-linux.zip igic-linux
@@ -58,7 +59,7 @@ jobs:
       - name: Copy binary and .gic files
         run: |
           mkdir -p igic-win
-          cp igic/target/release/igic igic-win/
+          cp igic/target/release/igic.exe igic-win/
           cp igic/src/libraries/**/*.gic igic-win/ || true
 
       - name: Create zip archive
