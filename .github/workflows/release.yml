@@ -72,3 +72,29 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           files: igic-win.zip
+  build-macos:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Install Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          override: true
+
+      - name: Build release
+        run: |
+          cd igic
+          cargo build --release
+
+      - name: Package
+        run: |
+          mkdir -p igic-macos/libraries
+          cp igic/target/release/igic igic-macos/
+          cp igic/src/libraries/*.gic igic-macos/libraries/
+          zip -r igic-macos.zip igic-macos
+
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: igic-macos.zip
