@@ -28,9 +28,6 @@ fn main() {
 
 	println!("Welcome to the IGIC REPL! Type 'exit' or 'quit' to leave.");
 	let history_path = "igic_history.txt";
-	if rl.load_history(history_path).is_err() {
-		println!("No previous history.");
-	}
 	loop {
 		let readline = rl.readline("igic> ");
 		match readline {
@@ -43,7 +40,7 @@ fn main() {
 
 				let _ = rl.add_history_entry(input);
 
-				if input.eq_ignore_ascii_case("exit()") || input.eq_ignore_ascii_case("quit()") {
+				if input.eq_ignore_ascii_case("exit") || input.eq_ignore_ascii_case("quit") {
 					break;
 				}
 
@@ -56,7 +53,7 @@ fn main() {
 						if clausifier.get_progam_length() - progam_index >= 1 {
 							println!("{}", clausifier.to_str_from(progam_index));
 						} else {
-							eprint!("{}", "Error: ".red());
+							eprint!("{}", "Warning: ".yellow());
 							eprintln!("No program loaded. Please load a .gic file first.");
 						}
 					},
@@ -75,12 +72,21 @@ fn main() {
 							);
 						}
 					},
+					"help" | "h" => {
+						println!(
+							"Available commands:\n\
+							- load <file>: Load a GIC file.\n\
+							- query \"<expr>\": Query the program with a formula.\n\
+							- program: Show the current program.\n\
+							- exit or quit: Exit the REPL."
+						);
+					},
 					_ => {
 						eprint!("{}", "Error: ".red());
 						eprintln!(
-						"Unknown command: '{}'. Use 'load <file>', 'query \"<expr>\"', program, 'exit', or 'quit'.",
-						command
-					)
+							"Unknown command: '{}'. Use 'help' or 'h' for more information.",
+							command
+						)
 					},
 				}
 			},
