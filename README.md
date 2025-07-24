@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="https://github.com/LucasGrasso/gic/blob/master/assets/logo.png" />
+  <img src="https://github.com/LucasGrasso/gic/blob/master/assets/logo_150px.png" />
 </p>
 
 <p align="center">
