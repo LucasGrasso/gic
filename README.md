@@ -35,8 +35,6 @@ To use GIC, you can run the **igic** interpreter and load a file containing your
 ### Example
 
 ```
-cd igic
-cargo run
 Welcome to the IGIC REPL! Type 'exit' or 'quit' to leave.
 igic> load ..\examples\family.gic
 loaded.
