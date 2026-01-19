@@ -45,18 +45,6 @@ export default function Home() {
             </a>
           </div>
         </div>
-
-        {/* Code Block */}
-        <div className="mt-16 rounded-xl border border-border bg-card/50 backdrop-blur p-8 overflow-x-auto">
-          <pre className="font-mono text-sm text-foreground/80 text-balance">
-            <code>{`load "examples/family.gic"
-
-query "∃ X. ∃ Y. Grandpa(X, Y)"
-
-// Output:
-X := juan(), Y := maria()`}</code>
-          </pre>
-        </div>
       </section>
 
       {/* Features Section */}
