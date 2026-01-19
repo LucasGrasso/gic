@@ -1,44 +1,13 @@
 import Image from 'next/image'
-import { ChevronRight, Code2, Zap, BookOpen, Github } from 'lucide-react'
+import { ChevronRight, Code2, Zap, BookOpen } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import Navbar from '@/components/navbar/Navbar'
+import Footer from '@/components/footer/Footer'
 
 export default function Home() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-secondary/20 dark:from-background dark:via-background dark:to-secondary/10">
-      {/* Navigation */}
-      <nav className="sticky top-0 z-50 bg-background/80 backdrop-blur-lg border-b border-border">
-        <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <Image
-              src="/logo.png"
-              alt="GIC Logo"
-              width={40}
-              height={40}
-              className="rounded-lg"
-            />
-            <span className="text-xl font-bold text-foreground">GIC</span>
-          </div>
-          <div className="hidden md:flex items-center gap-8">
-            <a href="#features" className="text-foreground/70 hover:text-foreground transition">
-              Features
-            </a>
-            <a href="#syntax" className="text-foreground/70 hover:text-foreground transition">
-              Learn
-            </a>
-            <a href="#examples" className="text-foreground/70 hover:text-foreground transition">
-              Examples
-            </a>
-            <a
-              href="https://github.com/LucasGrasso/gic"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-foreground/70 hover:text-foreground transition"
-            >
-              <Github className="w-5 h-5" />
-            </a>
-          </div>
-        </div>
-      </nav>
+      <Navbar />
 
       {/* Hero Section */}
       <section className="max-w-6xl mx-auto px-6 py-24 md:py-32">
@@ -53,13 +22,9 @@ export default function Home() {
             />
           </div>
 
-          <div className="inline-block px-4 py-2 bg-accent/10 border border-accent/20 rounded-full">
-            <span className="text-sm font-medium text-accent">First Order Logic Programming</span>
-          </div>
-
           <h1 className="text-5xl md:text-7xl font-bold text-balance text-foreground leading-tight">
-            Logic Programming
-            <span className="block text-primary">Redefined</span>
+            The progamming language for
+            <span className="block text-primary">First Order Logic</span>
           </h1>
 
           <p className="text-lg md:text-xl text-foreground/60 max-w-2xl mx-auto text-balance">
@@ -239,93 +204,7 @@ Length([], 0)`,
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="border-t border-border bg-card/50">
-        <div className="max-w-6xl mx-auto px-6 py-12">
-          <div className="grid md:grid-cols-4 gap-8 mb-8">
-            <div>
-              <div className="flex items-center gap-3 mb-4">
-                <Image
-                  src="/logo.png"
-                  alt="GIC Logo"
-                  width={32}
-                  height={32}
-                  className="rounded-lg"
-                />
-                <span className="font-bold text-foreground">GIC</span>
-              </div>
-              <p className="text-sm text-foreground/60">Logic programming language for first-order logic.</p>
-            </div>
-
-            <div>
-              <h4 className="font-semibold text-foreground mb-4">Learn</h4>
-              <ul className="space-y-2 text-sm text-foreground/60">
-                <li>
-                  <a href="#syntax" className="hover:text-foreground transition">
-                    Syntax Guide
-                  </a>
-                </li>
-                <li>
-                  <a href="#features" className="hover:text-foreground transition">
-                    Features
-                  </a>
-                </li>
-                <li>
-                  <a href="#examples" className="hover:text-foreground transition">
-                    Examples
-                  </a>
-                </li>
-              </ul>
-            </div>
-
-            <div>
-              <h4 className="font-semibold text-foreground mb-4">Resources</h4>
-              <ul className="space-y-2 text-sm text-foreground/60">
-                <li>
-                  <a
-                    href="https://github.com/LucasGrasso/gic/blob/master/BuiltIns.md"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="hover:text-foreground transition"
-                  >
-                    Built-ins
-                  </a>
-                </li>
-                <li>
-                  <a
-                    href="https://github.com/LucasGrasso/gic"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="hover:text-foreground transition"
-                  >
-                    GitHub
-                  </a>
-                </li>
-              </ul>
-            </div>
-
-            <div>
-              <h4 className="font-semibold text-foreground mb-4">License</h4>
-              <p className="text-sm text-foreground/60">
-                GIC is licensed under the <br />
-                <a
-                  href="https://github.com/LucasGrasso/gic/blob/master/LICENSE.md"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="hover:text-foreground transition"
-                >
-                  GNU General Public License v3.0
-                </a>
-              </p>
-            </div>
-          </div>
-
-          <div className="border-t border-border pt-8 flex flex-col md:flex-row justify-between items-center text-sm text-foreground/60">
-            <p>&copy; 2025 Lucas Grasso. All rights reserved.</p>
-            <p>Created with ❤️ for logic programming</p>
-          </div>
-        </div>
-      </footer>
+      <Footer />
     </div>
   )
 }

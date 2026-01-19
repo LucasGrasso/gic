@@ -30,7 +30,7 @@ function mergeClassNames(...classes: Array<string | undefined | false>) {
 export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
 	({ variant = "default", size = "md", className, children, ...props }, ref) => {
 		const classes = mergeClassNames(
-			"inline-flex items-center justify-center rounded-md font-medium transition",
+			"inline-flex items-center justify-center rounded-md font-medium transition cursor-pointer",
 			variantStyles[variant],
 			sizeStyles[size],
 			className
