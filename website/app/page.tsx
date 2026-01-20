@@ -1,5 +1,5 @@
 import Image from 'next/image'
-import { ChevronRight, Code2, Zap, BookOpen, Circle } from 'lucide-react'
+import { ChevronRight, Code2, Zap, BookOpen } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import Navbar from '@/components/navbar/Navbar'
 import Footer from '@/components/footer/Footer'
@@ -86,40 +86,38 @@ export default function Home() {
 
       {/* Syntax Section */}
       <section id="syntax" className="max-w-6xl mx-auto px-6 py-24 border-t border-border">
-        <div className="grid md:grid-cols-2 gap-12 items-center">
+        <div className="grid md:grid-cols-2 gap-12 items-start">
           <div>
-            <h2 className="text-4xl font-bold text-foreground mb-6">Clean, Intuitive Syntax</h2>
+            <h2 className="text-4xl font-bold text-foreground mb-6">FOL-like Syntax</h2>
             <p className="text-foreground/60 mb-6">
-              GIC syntax is designed to be clear and expressive. Write first-order logic formulas naturally.
+              GIC uses a first-order logic syntax. If <code className="bg-muted px-1.5 py-0.5 rounded text-sm font-mono">P</code> is a predicate (Uppercase) and <code className="bg-muted px-1.5 py-0.5 rounded text-sm font-mono">t1, ..., tn</code> are terms (variables or function applications in lowercase), then L-Formulas are defined as:
             </p>
-            <ul className="space-y-4">
-              {[
-                'Predicates: P(t1, t2, ...)',
-                'Logical operators: ∧, ∨, ⇒, ¬',
-                'Quantifiers: ∃, ∀',
-                'Variables: X,Y,Z,...',
-                'Terms: cat, tree, dog, x, y, z, ...',
-              ].map((item, i) => (
-                <li key={i} className="flex gap-3 text-foreground/80">
-                  <Circle className="w-5 h-5 text-accent flex-shrink-0 mt-0.5" />
-                  <span>{item}</span>
-                </li>
-              ))}
-            </ul>
+
+            <div className="space-y-4 text-foreground/80">
+              <p>
+                A <code className="bg-muted px-1.5 py-0.5 rounded text-sm font-mono">.gic</code> file consists of a set of L-Formulas separated by <code className="bg-muted px-1.5 py-0.5 rounded text-sm font-mono">.</code>
+              </p>
+              <p>
+                You can use either ASCII operators (<code className="bg-muted px-1.5 py-0.5 rounded text-sm font-mono">and</code>, <code className="bg-muted px-1.5 py-0.5 rounded text-sm font-mono">or</code>, <code className="bg-muted px-1.5 py-0.5 rounded text-sm font-mono">impl</code>, <code className="bg-muted px-1.5 py-0.5 rounded text-sm font-mono">not</code>, <code className="bg-muted px-1.5 py-0.5 rounded text-sm font-mono">exists</code>, <code className="bg-muted px-1.5 py-0.5 rounded text-sm font-mono">forall</code>) or Unicode symbols (<code className="bg-muted px-1.5 py-0.5 rounded text-sm font-mono">∧</code>, <code className="bg-muted px-1.5 py-0.5 rounded text-sm font-mono">∨</code>, <code className="bg-muted px-1.5 py-0.5 rounded text-sm font-mono">⇒</code>, <code className="bg-muted px-1.5 py-0.5 rounded text-sm font-mono">¬</code>, <code className="bg-muted px-1.5 py-0.5 rounded text-sm font-mono">∃</code>, <code className="bg-muted px-1.5 py-0.5 rounded text-sm font-mono">∀</code>) interchangeably.
+              </p>
+              <p>
+                Universal quantifiers (<code className="bg-muted px-1.5 py-0.5 rounded text-sm font-mono">forall</code>) may be left implicit.
+              </p>
+            </div>
           </div>
 
           <div className="rounded-xl border border-border bg-card/50 backdrop-blur p-8">
+            <h3 className="text-sm font-semibold text-foreground/60 uppercase tracking-wider mb-4">Grammar</h3>
             <pre className="font-mono text-sm text-foreground/80 overflow-x-auto">
-              <code>{`// Grammar
-L-Formulas f ::=
-  P(t1,... tn)       // Predicates
-  | ⊥               // Bottom
-  | f ∧ f           // And
-  | f ∨ f           // Or
-  | f ⇒ f           // Implies
-  | ¬f              // Not
-  | ∃X. f           // Exists
-  | ∀X. f           // Forall`}</code>
+              <code>{`L-Formulas f ::=
+    P(t1, ..., tn)   // Predicate
+  | bottom           // ⊥
+  | f and f          // f ∧ f
+  | f or f           // f ∨ f
+  | f impl f         // f ⇒ f
+  | not f            // ¬ f
+  | exists X. f      // ∃ X. f
+  | forall X. f      // ∀ X. f`}</code>
             </pre>
           </div>
         </div>
