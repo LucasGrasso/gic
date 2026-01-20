@@ -1,5 +1,5 @@
 import Image from 'next/image'
-import { ChevronRight, Code2, Zap, BookOpen } from 'lucide-react'
+import { ChevronRight, Code2, Zap, BookOpen, Circle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import Navbar from '@/components/navbar/Navbar'
 import Footer from '@/components/footer/Footer'
@@ -97,10 +97,11 @@ export default function Home() {
                 'Predicates: P(t1, t2, ...)',
                 'Logical operators: ∧, ∨, ⇒, ¬',
                 'Quantifiers: ∃, ∀',
-                'Variables and terms',
+                'Variables: X,Y,Z,...',
+                'Terms: cat, tree, dog, x, y, z, ...',
               ].map((item, i) => (
                 <li key={i} className="flex gap-3 text-foreground/80">
-                  <ChevronRight className="w-5 h-5 text-accent flex-shrink-0 mt-0.5" />
+                  <Circle className="w-5 h-5 text-accent flex-shrink-0 mt-0.5" />
                   <span>{item}</span>
                 </li>
               ))}
