@@ -24,11 +24,11 @@ export default function Home() {
 
           <h1 className="text-5xl md:text-7xl font-bold text-balance text-foreground leading-tight">
             The progamming language for
-            <span className="block text-primary">First Order Logic</span>
+            <span className="block text-primary">First Order Logic*</span>
           </h1>
 
-          <p className="text-lg md:text-xl text-foreground/60 max-w-2xl mx-auto text-balance">
-            GIC is a modern programming language for First Order Logic. Parse, resolve, and compute with elegant syntax and powerful semantics.
+          <p className="text-lg md:text-m text-foreground/60 max-w-2xl mx-auto text-balance">
+            * You should check PROLOG out.
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center pt-8">
