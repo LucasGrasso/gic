@@ -135,20 +135,27 @@ L-Formulas f ::=
           {[
             {
               title: 'Family Relations',
-              code: `Grandpa(X, Y) ⇒ ∃Z. (Father(X, Z) ∧ Father(Z, Y))`,
+              code: `(Father(A,B) and Father(B,C)) ⇒ Grandpa(A,C).`,
               description: 'Define and query complex relationships with logical rules.',
             },
             {
               title: 'List Operations',
-              code: `Length([H|T], N) ⇒ Length(T, N-1)
-Length([], 0)`,
+              code: `Reverse(XS,XS) ⇒ Palindrome(Xs)`,
               description: 'Work with recursive data structures and solve constraints.',
             },
             {
-              title: 'Logical Queries',
-              code: `query "∃ X. Brother(X, luis)"
-// Returns all X where X is a brother of luis`,
-              description: 'Express complex queries using quantified logic formulas.',
+              title: 'Fibonacci',
+              code: `Fib(0,0).
+Fib(1,1).
+(
+	Gt(N,1) and
+	Sub(N,1,N1) and
+	Fib(N1,F1) and
+	Sub(N,2,N2) and
+	Fib(N2,F2) and
+	Add(F1,F2,F)
+) impl Fib(N,F).`,
+              description: 'Express complex mathematical expressions with logic formulas.',
             },
           ].map((example) => (
             <div
