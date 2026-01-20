@@ -42,14 +42,12 @@ export function Footer() {
 						<h4 className="font-semibold text-foreground mb-4">Resources</h4>
 						<ul className="space-y-2 text-sm text-foreground/60">
 							<li>
-								<a
-									href="https://github.com/LucasGrasso/gic/blob/master/BuiltIns.md"
-									target="_blank"
-									rel="noopener noreferrer"
+								<Link
+									href="/builtins"
 									className="hover:text-foreground transition"
 								>
 									Built-ins
-								</a>
+								</Link>
 							</li>
 							<li>
 								<a

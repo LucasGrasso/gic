@@ -14,14 +14,17 @@ export function Navbar() {
 				</div>
 
 				<div className="hidden md:flex items-center gap-8">
-					<a href="#features" className="text-foreground/70 hover:text-foreground transition">
+					<a href="/#features" className="text-foreground/70 hover:text-foreground transition">
 						Features
 					</a>
-					<a href="#syntax" className="text-foreground/70 hover:text-foreground transition">
+					<a href="/#syntax" className="text-foreground/70 hover:text-foreground transition">
 						Learn
 					</a>
-					<a href="#examples" className="text-foreground/70 hover:text-foreground transition">
+					<a href="/#examples" className="text-foreground/70 hover:text-foreground transition">
 						Examples
+					</a>
+					<a href="/builtins" className="text-foreground/70 hover:text-foreground transition">
+						Built-ins
 					</a>
 					<a
 						href="https://github.com/LucasGrasso/gic"
